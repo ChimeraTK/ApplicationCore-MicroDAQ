@@ -10,9 +10,9 @@ option(ENABLE_TESTING "Build tests" ON)
 
 #______________________________________________________________________________
 #                                                                       VERSION
-set( ${PROJECT_NAME}_MAJOR_VERSION 01 )
-set( ${PROJECT_NAME}_MINOR_VERSION 00 )
-set( ${PROJECT_NAME}_PATCH_VERSION 00 )
+set(${PROJECT_NAME}_MAJOR_VERSION 01)
+set(${PROJECT_NAME}_MINOR_VERSION 00)
+set(${PROJECT_NAME}_PATCH_VERSION 00)
 include(${CMAKE_SOURCE_DIR}/cmake/set_version_numbers.cmake)
 
 include(${CMAKE_SOURCE_DIR}/cmake/set_default_flags.cmake)
@@ -25,7 +25,7 @@ include(cmake/add_dependency.cmake)
 add_dependency(ChimeraTK-ApplicationCore 01.00 REQUIRED)
 
 IF(ENABLE_HDF5)
-  FIND_PACKAGE( HDF5 REQUIRED COMPONENTS C CXX HL)
+  FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C CXX HL)
 ENDIF(ENABLE_HDF5)
 
 IF(ENABLE_ROOT)
@@ -40,12 +40,12 @@ include(cmake/enable_latest_cxx_support.cmake)
 
 #______________________________________________________________________________
 #                                                                      Includes
-include_directories( ${PROJECT_SOURCE_DIR} include ${HDF5_INCLUDE_DIRS})
+include_directories(${PROJECT_SOURCE_DIR} include ${HDF5_INCLUDE_DIRS})
 
 #______________________________________________________________________________
 #                                                                    Dictionary
 IF(ENABLE_ROOT)
-  set( ROOTDICTDAQ ${PROJECT_NAME}Dict )
+  set(ROOTDICTDAQ ${PROJECT_NAME}Dict)
   ROOT_GENERATE_DICTIONARY( ${ROOTDICTDAQ} data_types.h
                                         LINKDEF include/LinkDef.h)
 ENDIF(ENABLE_ROOT)
@@ -72,23 +72,23 @@ ENDIF(ENABLE_ROOT)
 # Build library that contains the MicroDAQ module to be used in ChimeraTK
 add_library( ${PROJECT_NAME} SHARED ${source_MicroDAQ})
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${daq_header}")
-set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_FULL_LIBRARY_VERSION} SOVERSION ${${PROJECT_NAME}_SOVERSION})
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_FULL_LIBRARY_VERSION}
+                                                 SOVERSION ${${PROJECT_NAME}_SOVERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 IF(ENABLE_ROOT)
-target_link_libraries( ${PROJECT_NAME} 
-PUBLIC ${ChimeraTK-ApplicationCore_LIBRARIES}
-PRIVATE ${HDF5_HL_LIBRARIES} 
-        ${HDF5_CXX_LIBRARIES}
-        ROOT::Tree
-)
+    target_link_libraries(${PROJECT_NAME}
+        PUBLIC ${ChimeraTK-ApplicationCore_LIBRARIES}
+        PRIVATE ${HDF5_HL_LIBRARIES}
+                ${HDF5_CXX_LIBRARIES}
+                ROOT::Tree
+    )
 ELSE()
-target_link_libraries( ${PROJECT_NAME} 
-PUBLIC ${ChimeraTK-ApplicationCore_LIBRARIES}
-PRIVATE ${HDF5_HL_LIBRARIES} 
-        ${HDF5_CXX_LIBRARIES}
-)
-
+    target_link_libraries(${PROJECT_NAME}
+        PUBLIC ${ChimeraTK-ApplicationCore_LIBRARIES}
+        PRIVATE ${HDF5_HL_LIBRARIES}
+                ${HDF5_CXX_LIBRARIES}
+    )
 ENDIF()
   
 
@@ -98,17 +98,23 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND ENABLE_TESTING)
   
   if(ENABLE_HDF5)
     add_executable(test_HDF5 test/test_HDF5.C)
-    target_link_libraries( test_HDF5 ${PROJECT_NAME})
+    target_link_libraries(test_HDF5 ${PROJECT_NAME})
+    set_target_properties(test_HDF5 PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
+                                               LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
     add_test(test_HDF5 test_HDF5)
   endif(ENABLE_HDF5)
   
   if(ENABLE_ROOT)
     add_executable(test_ScalarMicroDAQ test/testScalarMicroDAQ.C)
-    target_link_libraries( test_ScalarMicroDAQ ${PROJECT_NAME} ROOT::Tree)
+    target_link_libraries(test_ScalarMicroDAQ ${PROJECT_NAME} ROOT::Tree)
+    set_target_properties(test_ArrayMicroDAQ PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
+                                                        LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
     add_test( test_ScalarMicroDAQ test_ScalarMicroDAQ)                         
                               
     add_executable(test_ArrayMicroDAQ test/testArrayMicroDAQ.C)
-    target_link_libraries( test_ArrayMicroDAQ ${PROJECT_NAME} ROOT::Tree)                         
+    target_link_libraries(test_ArrayMicroDAQ ${PROJECT_NAME} ROOT::Tree)
+    set_target_properties(test_ArrayMicroDAQ PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
+                                                        LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
     add_test( test_ArrayMicroDAQ test_ArrayMicroDAQ)                             
   endif(ENABLE_ROOT)                                  
   
