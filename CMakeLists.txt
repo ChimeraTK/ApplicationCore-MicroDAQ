@@ -107,7 +107,7 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND ENABLE_TESTING)
   if(ENABLE_ROOT)
     add_executable(test_ScalarMicroDAQ test/testScalarMicroDAQ.C)
     target_link_libraries(test_ScalarMicroDAQ ${PROJECT_NAME} ROOT::Tree)
-    set_target_properties(test_ArrayMicroDAQ PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
+    set_target_properties(test_ScalarMicroDAQ PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
                                                         LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
     add_test( test_ScalarMicroDAQ test_ScalarMicroDAQ)                         
                               
