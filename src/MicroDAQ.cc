@@ -73,15 +73,11 @@ namespace ChimeraTK {
   }
 
   template<typename TRIGGERTYPE>
-  void BaseDAQ<TRIGGERTYPE>::addSource(const Module& source, const RegisterPath& namePrefix) {
+  void BaseDAQ<TRIGGERTYPE>::addSource(const Module& source, const RegisterPath& namePrefix, const bool& isCSModule) {
     // for simplification, first create a VirtualModule containing the correct
     // hierarchy structure (obeying eliminate hierarchy etc.)
     auto dynamicModel = source.findTag(".*"); /// @todo use virtualise() instead
 
-    //\ToDo: Rework the variable name creation without CS specific workaround
-    bool isCSModule = false;
-    if(dynamic_cast<const ControlSystemModule*>(&source) != nullptr)
-      isCSModule = true;
     // create variable group map for namePrefix if needed
     if(_groupMap.find(namePrefix) == _groupMap.end()) {
       // search for existing parent (if any)
@@ -119,8 +115,17 @@ namespace ChimeraTK {
 
     // recurse into submodules
     for(auto mod : dynamicModel.getSubmoduleList()) {
-      addSource(*mod, namePrefix / mod->getName());
+      addSource(*mod, namePrefix / mod->getName(), isCSModule);
     }
+  }
+
+  template<typename TRIGGERTYPE>
+  void BaseDAQ<TRIGGERTYPE>::addSource(const Module& source, const RegisterPath& namePrefix) {
+    //\ToDo: Rework the variable name creation without CS specific workaround
+    bool isCSModule = false;
+    if(dynamic_cast<const ControlSystemModule*>(&source) != nullptr)
+      isCSModule = true;
+    addSource(source, namePrefix, isCSModule);
   }
 
   template<typename TRIGGERTYPE>

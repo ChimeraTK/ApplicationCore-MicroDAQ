@@ -43,6 +43,11 @@ namespace ChimeraTK {
      */
     bool checkFile();
 
+    /**
+     * Interal function that knows if the source is a ControlsystemModul
+     */
+    virtual void addSource(const Module& source, const RegisterPath& namePrefix, const bool &isCSModule);
+
   protected:
     /** Parameters for the data decimation */
     uint32_t _decimationFactor, _decimationThreshold;
