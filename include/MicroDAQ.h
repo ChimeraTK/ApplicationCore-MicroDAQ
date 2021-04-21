@@ -181,20 +181,33 @@ namespace ChimeraTK {
             uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000,
             HierarchyModifier hierarchyModifier = HierarchyModifier::none,
             const std::unordered_set<std::string>& tags = {}, const std::string &pathToTrigger="trigger")
-        : ApplicationModule(owner, name, description, hierarchyModifier, tags), _decimationFactor(decimationFactor),
+        : ApplicationModule(owner, name, description, hierarchyModifier), _decimationFactor(decimationFactor),
           _decimationThreshold(decimationThreshold),
           _daqDefaultPath((boost::filesystem::current_path()/"uDAQ").string()),
           _suffix(suffix),
-          triggerGroup(this, pathToTrigger[0] != '/' ? "./"+pathToTrigger : pathToTrigger)
+          _tags(addCompatibilityTag(tags)),
+          triggerGroup(this, pathToTrigger[0] != '/' ? "./"+pathToTrigger : pathToTrigger, tags)
     {}
 
     BaseDAQ()
     : _decimationFactor(0), _decimationThreshold(0)
     {}
 
+  private:
+
+    std::unordered_set<std::string> addCompatibilityTag(std::unordered_set<std::string> tags) {
+      tags.insert("MicroDAQ.CONFIG");
+      return tags;
+    }
+
+    std::unordered_set<std::string> _tags;
+
+  public:
+
     struct TriggerGroup : HierarchyModifyingGroup {
-      TriggerGroup(EntityOwner* owner, const std::string& pathToTrigger)
-      : HierarchyModifyingGroup(owner, HierarchyModifyingGroup::getPathName(pathToTrigger), ""),
+      TriggerGroup(EntityOwner* owner, const std::string& pathToTrigger,
+                   const std::unordered_set<std::string>& tags = {})
+      : HierarchyModifyingGroup(owner, HierarchyModifyingGroup::getPathName(pathToTrigger), "", tags),
         trigger{this, HierarchyModifyingGroup::getUnqualifiedName(pathToTrigger), "", "Trigger input"} {}
 
       TriggerGroup() {}
@@ -206,36 +219,36 @@ namespace ChimeraTK {
 
     ScalarPollInput<std::string> setPath { this, "directory", "",
         "Directory where to store the DAQ data. If not set a subdirectory called uDAQ in the current directory is used.",
-        { "MicroDAQ.CONFIG" } };
+        _tags };
 
     ScalarPollInput<int> enable { this, "enable", "",
         "DAQ is active when set to 0 and disabled when set to 0.",
-        { "MicroDAQ.CONFIG" } };
+        _tags };
 
     ScalarPollInput<uint32_t> nMaxFiles { this, "nMaxFiles", "",
         "Maximum number of files in the ring buffer "
         "(oldest file will be overwritten).",
-        { "MicroDAQ.CONFIG" } };
+        _tags };
 
     ScalarPollInput<uint32_t> nTriggersPerFile { this, "nTriggersPerFile", "",
         "Number of triggers stored in each file.",
-        { "MicroDAQ.CONFIG" } };
+        _tags };
 
     ScalarOutput<std::string> currentPath { this, "currentDirectory", "",
         "Directory currently used for DAQ. To switch directories turn off DAQ and set new directory.",
-        { "MicroDAQ.STATUS" } };
+        _tags };
 
     ScalarOutput<uint32_t> currentBuffer { this, "currentBuffer", "",
         "File number currently written to. If DAQ this shows the next buffer to be used by the DAQ.",
-        { "MicroDAQ.STATUS" } };
+        _tags };
 
     ScalarOutput<uint32_t> currentEntry { this, "currentEntry", "",
         "Last entry number written. Is reset with every new file.",
-        { "MicroDAQ.STATUS" } };
+        _tags };
 
     ScalarOutput<uint32_t> errorStatus { this, "DAQError", "",
         "True in case an error occurred. Reset by toggling enable.",
-        { "MicroDAQ.STATUS" } };
+        _tags };
 
     virtual void addSource(const Module& source, const RegisterPath& namePrefix = "");
 

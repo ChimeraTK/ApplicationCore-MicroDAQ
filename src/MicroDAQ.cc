@@ -32,7 +32,7 @@ namespace ChimeraTK {
   MicroDAQ<TRIGGERTYPE>::MicroDAQ(EntityOwner* owner, const std::string& name, const std::string& description,
       const std::string& inputTag,  const std::string& pathToTrigger, HierarchyModifier hierarchyModifier,
       const std::unordered_set<std::string>& tags)
-  : ModuleGroup(owner, name, "", HierarchyModifier::hideThis, tags)
+  : ModuleGroup(owner, name, "", HierarchyModifier::hideThis)
   {
     // do nothing if the entire module is disabled
     if(appConfig().template get<int>("MicroDAQ/enable") == false) return;
