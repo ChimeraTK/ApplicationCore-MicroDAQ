@@ -111,7 +111,7 @@ namespace ChimeraTK {
     // loop: process incoming triggers
     auto group = ApplicationModule::readAnyGroup();
     while(true) {
-      group.readUntil(BaseDAQ<TRIGGERTYPE>::trigger.getId());
+      group.readUntil(BaseDAQ<TRIGGERTYPE>::triggerGroup.trigger.getId());
       storage.processTrigger();
     }
   }

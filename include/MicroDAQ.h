@@ -12,10 +12,16 @@
 #include <ChimeraTK/ApplicationCore/ScalarAccessor.h>
 #include <ChimeraTK/ApplicationCore/ArrayAccessor.h>
 #include <ChimeraTK/ApplicationCore/VariableGroup.h>
+#include <ChimeraTK/ApplicationCore/ModuleGroup.h>
+#include <ChimeraTK/ApplicationCore/ConfigReader.h>
+#include <ChimeraTK/ApplicationCore/HierarchyModifyingGroup.h>
 
 #include <boost/filesystem.hpp>
 
 #include <map>
+#include <algorithm>
+#include <cctype>
+#include <string>
 
 namespace ChimeraTK {
   namespace detail {
@@ -23,6 +29,47 @@ namespace ChimeraTK {
     struct BaseDAQAccessorAttacher;
   } // namespace detail
 
+  template<typename TRIGGERTYPE>
+  class BaseDAQ;
+
+  /**
+   *  Envelope class providing an easy-to-use high-level application interface. Instantiate this class in your
+   *  application to use the MicroDAQ. It will configure itself using the ConfigReader (needs to be instantiated
+   *  in your application before the MicroDAQ).
+   */
+  template<typename TRIGGERTYPE>
+  class MicroDAQ : public ModuleGroup {
+   public:
+
+    /**
+     *  Construct MicroDAQ system as it is configured in the ConfigReader config file.
+     *
+     *  As data source all variables provided by the owner and its submodules matching the specified inputTag is used.
+     *
+     *  In the config file, the following variables are required:
+     *  - MicroDAQ/enable (int32): boolean flag whether the MicroDAQ system is enabled or not
+     *  - MicroDAQ/outputFormat (string): format of the output data, either "hdf5" or "root"
+     *  - MicroDAQ/decimationFactor (uint32): decimation factor applied to large arrays (above decimationThreshold)
+     *  - MicroDAQ/decimationThreshold (uint32): array size threshold above wich the decimationFactor is applied
+     *
+     *  If MicroDAQ/enable == 0, all other variables can be omitted.
+     */
+    MicroDAQ(EntityOwner* owner, const std::string& name, const std::string& description,
+        const std::string& inputTag, const std::string& pathToTrigger,
+        HierarchyModifier hierarchyModifier = HierarchyModifier::none,
+        const std::unordered_set<std::string>& tags = {});
+    MicroDAQ() {}
+
+   protected:
+
+    std::shared_ptr<BaseDAQ<TRIGGERTYPE>> impl;
+
+  };
+
+
+  /**
+   *  Base class used by the actual MicroDAQ implementations (HDF5, ROOT)
+   */
   template<typename TRIGGERTYPE>
   class BaseDAQ: public ApplicationModule {
   private:
@@ -132,19 +179,30 @@ namespace ChimeraTK {
   public:
     BaseDAQ(EntityOwner* owner, const std::string& name, const std::string& description, const std::string &suffix,
             uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000,
-            HierarchyModifier hierarchyModifier = HierarchyModifier::none, const std::unordered_set<std::string>& tags = {})
+            HierarchyModifier hierarchyModifier = HierarchyModifier::none,
+            const std::unordered_set<std::string>& tags = {}, const std::string &pathToTrigger="trigger")
         : ApplicationModule(owner, name, description, hierarchyModifier, tags), _decimationFactor(decimationFactor),
           _decimationThreshold(decimationThreshold),
           _daqDefaultPath((boost::filesystem::current_path()/"uDAQ").string()),
-          _suffix(suffix) {}
+          _suffix(suffix),
+          triggerGroup(this, pathToTrigger[0] != '/' ? "./"+pathToTrigger : pathToTrigger)
+    {}
 
-    BaseDAQ() :
-        _decimationFactor(0), _decimationThreshold(0) {
-    }
+    BaseDAQ()
+    : _decimationFactor(0), _decimationThreshold(0)
+    {}
 
-    ScalarPushInput<TRIGGERTYPE> trigger { this, "trigger", "",
-        "When written, the MicroDAQ write snapshot of all variables "
-            "to the file" };
+    struct TriggerGroup : HierarchyModifyingGroup {
+      TriggerGroup(EntityOwner* owner, const std::string& pathToTrigger)
+      : HierarchyModifyingGroup(owner, HierarchyModifyingGroup::getPathName(pathToTrigger), ""),
+        trigger{this, HierarchyModifyingGroup::getUnqualifiedName(pathToTrigger), "", "Trigger input"} {}
+
+      TriggerGroup() {}
+
+      ScalarPushInput<TRIGGERTYPE> trigger;
+    } triggerGroup;
+
+    VariableNetworkNode trigger{triggerGroup.trigger};
 
     ScalarPollInput<std::string> setPath { this, "directory", "",
         "Directory where to store the DAQ data. If not set a subdirectory called uDAQ in the current directory is used.",

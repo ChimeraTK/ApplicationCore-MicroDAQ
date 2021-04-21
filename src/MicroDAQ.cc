@@ -17,7 +17,61 @@
 
 #include <ChimeraTK/ApplicationCore/ControlSystemModule.h>
 
+#ifdef ENABLE_HDF5
+#include "MicroDAQHDF5.h"
+#endif
+#ifdef ENABLE_ROOT
+#include "MicroDAQROOT.h"
+#endif
+
 namespace ChimeraTK {
+
+  INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES(MicroDAQ);
+
+  template<typename TRIGGERTYPE>
+  MicroDAQ<TRIGGERTYPE>::MicroDAQ(EntityOwner* owner, const std::string& name, const std::string& description,
+      const std::string& inputTag,  const std::string& pathToTrigger, HierarchyModifier hierarchyModifier,
+      const std::unordered_set<std::string>& tags)
+  : ModuleGroup(owner, name, "", HierarchyModifier::hideThis, tags)
+  {
+    // do nothing if the entire module is disabled
+    if(appConfig().template get<int>("MicroDAQ/enable") == false) return;
+
+    // obtain desired output format from configuration and convert to lower case
+    auto type = appConfig().template get<std::string>("MicroDAQ/outputFormat");
+    std::transform(type.begin(), type.end(), type.begin(), [](unsigned char c){ return std::tolower(c); });
+
+    // obtain decimation factor from configuration
+    uint32_t decimationFactor = appConfig().template get<uint32_t>("MicroDAQ/decimationFactor");
+    uint32_t decimationThreshold = appConfig().template get<uint32_t>("MicroDAQ/decimationThreshold");
+
+    // instantiate DAQ implementation for the desired output format
+    if(type == "hdf5") {
+#ifdef ENABLE_HDF5
+        impl = std::make_shared<HDF5DAQ<TRIGGERTYPE>>(this, name, description, decimationFactor, decimationThreshold,
+                                                          hierarchyModifier, tags, pathToTrigger);
+#else
+      throw ChimeraTK::logic_error("MicroDAQ: Output format HDF5 selected but not compiled in.");
+#endif
+    }
+    else if(type == "root") {
+#ifdef ENABLE_ROOT
+      impl = std::make_shared<RootDAQ<TRIGGERTYPE>>(this, name, description, decimationFactor, decimationThreshold,
+                                                    hierarchyModifier, tags, pathToTrigger);
+#else
+      throw ChimeraTK::logic_error("MicroDAQ: Output format ROOT selected but not compiled in.");
+#endif
+    }
+    else {
+      throw ChimeraTK::logic_error("MicroDAQ: Unknown output format specified in config file: '"+type+"'.");
+    }
+
+    // connect input data with the DAQ implementation
+    impl->addSource(owner->findTag(inputTag));
+  }
+
+
+
   namespace detail {
 
     /** Callable class for use with  boost::fusion::for_each: Attach the given

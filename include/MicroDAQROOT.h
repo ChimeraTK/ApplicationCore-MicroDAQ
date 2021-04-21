@@ -45,8 +45,8 @@ namespace ChimeraTK {
       */
       RootDAQ(EntityOwner* owner, const std::string& name, const std::string& description,
              uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000, HierarchyModifier hierarchyModifier = HierarchyModifier::none,
-             const std::unordered_set<std::string>& tags = {})
-             : BaseDAQ<TRIGGERTYPE>(owner, name, description, ".root", decimationFactor, decimationThreshold, hierarchyModifier, tags) {}
+             const std::unordered_set<std::string>& tags = {}, const std::string &pathToTrigger="trigger")
+             : BaseDAQ<TRIGGERTYPE>(owner, name, description, ".root", decimationFactor, decimationThreshold, hierarchyModifier, tags, pathToTrigger) {}
 
      /** Default constructor, creates a non-working module. Can be used for late
       * initialisation. */

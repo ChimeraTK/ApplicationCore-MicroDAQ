@@ -56,17 +56,18 @@ ENDIF(ENABLE_ROOT)
 set(source_MicroDAQ src/MicroDAQ.cc)
 SET(daq_header include/MicroDAQ.h)
 
-IF(ENABLE_HDF5 )
+IF(ENABLE_HDF5)
   # Append MicroDAQ based on HDF5
   list(APPEND source_MicroDAQ src/MicroDAQHDF5.cc)
   string(APPEND daq_header ";include/MicroDAQHDF5.h") 
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_HDF5")
 ENDIF(ENABLE_HDF5)
 
 IF(ENABLE_ROOT)
   string(APPEND daq_header ";include/MicroDAQROOT.h;include/data_types.h")
   # Append MicroDAQ based on ROOT
-  list(APPEND source_MicroDAQ src/MicroDAQROOT.cc
-                                 ${ROOTDICTDAQ})
+  list(APPEND source_MicroDAQ src/MicroDAQROOT.cc ${ROOTDICTDAQ})
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_ROOT")
 ENDIF(ENABLE_ROOT)
 
 # Build library that contains the MicroDAQ module to be used in ChimeraTK
