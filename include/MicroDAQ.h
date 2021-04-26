@@ -50,7 +50,7 @@ namespace ChimeraTK {
      *  - MicroDAQ/enable (int32): boolean flag whether the MicroDAQ system is enabled or not
      *  - MicroDAQ/outputFormat (string): format of the output data, either "hdf5" or "root"
      *  - MicroDAQ/decimationFactor (uint32): decimation factor applied to large arrays (above decimationThreshold)
-     *  - MicroDAQ/decimationThreshold (uint32): array size threshold above wich the decimationFactor is applied
+     *  - MicroDAQ/decimationThreshold (uint32): array size threshold above which the decimationFactor is applied
      *
      *  If MicroDAQ/enable == 0, all other variables can be omitted.
      */
@@ -185,7 +185,7 @@ namespace ChimeraTK {
           _decimationThreshold(decimationThreshold),
           _daqDefaultPath((boost::filesystem::current_path()/"uDAQ").string()),
           _suffix(suffix),
-          _tags(addCompatibilityTag(tags)),
+          _tags(tags),
           triggerGroup(this, pathToTrigger[0] != '/' ? "./"+pathToTrigger : pathToTrigger, tags)
     {}
 
@@ -194,11 +194,6 @@ namespace ChimeraTK {
     {}
 
   private:
-
-    std::unordered_set<std::string> addCompatibilityTag(std::unordered_set<std::string> tags) {
-      tags.insert("MicroDAQ.CONFIG");
-      return tags;
-    }
 
     std::unordered_set<std::string> _tags; ///< Tags to be added to all variables of the DAQ module.
 
