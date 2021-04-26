@@ -46,14 +46,16 @@ namespace ChimeraTK {
       RootDAQ(EntityOwner* owner, const std::string& name, const std::string& description,
              uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000, HierarchyModifier hierarchyModifier = HierarchyModifier::none,
              const std::unordered_set<std::string>& tags = {}, const std::string &pathToTrigger="trigger")
-             : BaseDAQ<TRIGGERTYPE>(owner, name, description, ".root", decimationFactor, decimationThreshold, hierarchyModifier, tags, pathToTrigger) {}
+             : BaseDAQ<TRIGGERTYPE>(owner, name, description, ".root", decimationFactor, decimationThreshold, hierarchyModifier, tags, pathToTrigger) {
+        flushAfterNEntries.addTags(tags);
+      }
 
      /** Default constructor, creates a non-working module. Can be used for late
       * initialisation. */
      RootDAQ() : BaseDAQ<TRIGGERTYPE>() {}
 
      ScalarPollInput<uint32_t> flushAfterNEntries { this, "flushAfterNEntries", "",
-         "Number of entries to be accumulated before writing to file. This is ignored if value is 0.", { "MicroDAQ.CONFIG" } };
+         "Number of entries to be accumulated before writing to file. This is ignored if value is 0."};
 
     protected:
      void mainLoop() override;
