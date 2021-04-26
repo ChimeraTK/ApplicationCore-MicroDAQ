@@ -11,8 +11,8 @@ option(ENABLE_TESTING "Build tests" ON)
 #______________________________________________________________________________
 #                                                                       VERSION
 set(${PROJECT_NAME}_MAJOR_VERSION 01)
-set(${PROJECT_NAME}_MINOR_VERSION 00)
-set(${PROJECT_NAME}_PATCH_VERSION 03)
+set(${PROJECT_NAME}_MINOR_VERSION 01)
+set(${PROJECT_NAME}_PATCH_VERSION 00)
 include(${CMAKE_SOURCE_DIR}/cmake/set_version_numbers.cmake)
 
 include(${CMAKE_SOURCE_DIR}/cmake/set_default_flags.cmake)
@@ -22,7 +22,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/set_default_build_to_release.cmake)
 #______________________________________________________________________________
 #                                                                  Dependencies
 include(cmake/add_dependency.cmake)
-add_dependency(ChimeraTK-ApplicationCore 01.00 REQUIRED)
+add_dependency(ChimeraTK-ApplicationCore 02.02 REQUIRED)
 
 IF(ENABLE_HDF5)
   FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C CXX HL)
@@ -109,7 +109,7 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND ENABLE_TESTING)
     add_executable(test_ScalarMicroDAQ test/testScalarMicroDAQ.C)
     target_link_libraries(test_ScalarMicroDAQ ${PROJECT_NAME} ROOT::Tree)
     set_target_properties(test_ScalarMicroDAQ PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
-                                                        LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
+                                                         LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
     add_test( test_ScalarMicroDAQ test_ScalarMicroDAQ)                         
                               
     add_executable(test_ArrayMicroDAQ test/testArrayMicroDAQ.C)
