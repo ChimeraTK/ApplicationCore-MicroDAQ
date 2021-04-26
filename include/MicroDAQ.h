@@ -200,7 +200,7 @@ namespace ChimeraTK {
       return tags;
     }
 
-    std::unordered_set<std::string> _tags;
+    std::unordered_set<std::string> _tags; ///< Tags to be added to all variables of the DAQ module.
 
   public:
 
