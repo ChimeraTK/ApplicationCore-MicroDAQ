@@ -210,8 +210,6 @@ namespace ChimeraTK {
       ScalarPushInput<TRIGGERTYPE> trigger;
     } triggerGroup;
 
-    VariableNetworkNode trigger{triggerGroup.trigger};
-
     ScalarPollInput<std::string> setPath { this, "directory", "",
         "Directory where to store the DAQ data. If not set a subdirectory called uDAQ in the current directory is used.",
         _tags };
