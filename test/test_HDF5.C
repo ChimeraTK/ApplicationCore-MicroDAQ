@@ -68,14 +68,14 @@ struct testApp : public ChimeraTK::Application {
 
   Dummy<UserType> module{this,"Dummy","Dummy module"};
 
-  ChimeraTK::HDF5DAQ<UserType> daq;
+  ChimeraTK::HDF5DAQ<UserType> daq{this,"MicroDAQ","Test of the MicroDAQ"};
 
   std::string dir;
 
   void defineConnections() override {
     ChimeraTK::VariableNetworkNode trigger = cs["Config"]("trigger");
     trigger >> module.trigger;
-    daq = ChimeraTK::HDF5DAQ<UserType>{this,"test","Test"};
+//    daq = ChimeraTK::HDF5DAQ<UserType>{this,"MicroDAQ","Test of the MicroDAQ"};
     /**
      * Don't use the trigger for the microDAQ module. If doing so it might happen,
      * that the microDAQ module reads the latest value from the dummy module before it writes
@@ -84,9 +84,9 @@ struct testApp : public ChimeraTK::Application {
      * If using the out variable of the dummy module as trigger it is ensured
      * that the latest value is read by the microDAQ module.
      */
-    module.out >> daq.trigger;
+    module.out >> daq.triggerGroup.trigger;
     daq.addSource(module.findTag("DAQ"),"DAQ");
-    daq.findTag("MicroDAQ.CONFIG").connectTo(cs);
+    daq.connectTo(cs);
 
     dumpConnections();
   }
@@ -135,7 +135,7 @@ struct testAppArray : public ChimeraTK::Application {
 
   std::string dir;
 
-  ChimeraTK::HDF5DAQ<int> daq{this,"test","Test", _decimation, _decimationThreshold};
+  ChimeraTK::HDF5DAQ<int> daq{this,"MicroDAQ","Test of the MicroDAQ", _decimation, _decimationThreshold};
 //  ChimeraTK::MicroDAQ<int> daq{this,"MicroDAQ","Test", 10, 1000};
 
   void defineConnections() override {
@@ -149,9 +149,9 @@ struct testAppArray : public ChimeraTK::Application {
      * If using the out variable of the dummy module as trigger it is ensured
      * that the latest value is read by the microDAQ module.
      */
-    module.out1 >> daq.trigger;
+    module.out1 >> daq.triggerGroup.trigger;
     daq.addSource(module.findTag("DAQ"),"DAQ");
-    daq.findTag("MicroDAQ.CONFIG").connectTo(cs);
+    daq.connectTo(cs);
 
 
     dumpConnections();

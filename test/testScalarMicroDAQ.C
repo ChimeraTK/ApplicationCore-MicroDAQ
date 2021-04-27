@@ -105,9 +105,9 @@ struct testApp : public ChimeraTK::Application {
      * If using the out variable of the dummy module as trigger it is ensured
      * that the latest value is read by the microDAQ module.
      */
-    module.out >> daq.trigger;
+    module.out >> daq.triggerGroup.trigger;
     daq.addSource(module.findTag("DAQ"),"DAQ");
-    daq.findTag("MicroDAQ.CONFIG").connectTo(cs);
+    daq.connectTo(cs);
 
 
     dumpConnections();
