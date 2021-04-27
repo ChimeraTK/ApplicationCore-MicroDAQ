@@ -12,10 +12,16 @@
 #include <ChimeraTK/ApplicationCore/ScalarAccessor.h>
 #include <ChimeraTK/ApplicationCore/ArrayAccessor.h>
 #include <ChimeraTK/ApplicationCore/VariableGroup.h>
+#include <ChimeraTK/ApplicationCore/ModuleGroup.h>
+#include <ChimeraTK/ApplicationCore/ConfigReader.h>
+#include <ChimeraTK/ApplicationCore/HierarchyModifyingGroup.h>
 
 #include <boost/filesystem.hpp>
 
 #include <map>
+#include <algorithm>
+#include <cctype>
+#include <string>
 
 namespace ChimeraTK {
   namespace detail {
@@ -23,6 +29,47 @@ namespace ChimeraTK {
     struct BaseDAQAccessorAttacher;
   } // namespace detail
 
+  template<typename TRIGGERTYPE>
+  class BaseDAQ;
+
+  /**
+   *  Envelope class providing an easy-to-use high-level application interface. Instantiate this class in your
+   *  application to use the MicroDAQ. It will configure itself using the ConfigReader (needs to be instantiated
+   *  in your application before the MicroDAQ).
+   */
+  template<typename TRIGGERTYPE>
+  class MicroDAQ : public ModuleGroup {
+   public:
+
+    /**
+     *  Construct MicroDAQ system as it is configured in the ConfigReader config file.
+     *
+     *  As data source all variables provided by the owner and its submodules matching the specified inputTag is used.
+     *
+     *  In the config file, the following variables are required:
+     *  - MicroDAQ/enable (int32): boolean flag whether the MicroDAQ system is enabled or not
+     *  - MicroDAQ/outputFormat (string): format of the output data, either "hdf5" or "root"
+     *  - MicroDAQ/decimationFactor (uint32): decimation factor applied to large arrays (above decimationThreshold)
+     *  - MicroDAQ/decimationThreshold (uint32): array size threshold above which the decimationFactor is applied
+     *
+     *  If MicroDAQ/enable == 0, all other variables can be omitted.
+     */
+    MicroDAQ(EntityOwner* owner, const std::string& name, const std::string& description,
+        const std::string& inputTag, const std::string& pathToTrigger,
+        HierarchyModifier hierarchyModifier = HierarchyModifier::none,
+        const std::unordered_set<std::string>& tags = {});
+    MicroDAQ() {}
+
+   protected:
+
+    std::shared_ptr<BaseDAQ<TRIGGERTYPE>> impl;
+
+  };
+
+
+  /**
+   *  Base class used by the actual MicroDAQ implementations (HDF5, ROOT)
+   */
   template<typename TRIGGERTYPE>
   class BaseDAQ: public ApplicationModule {
   private:
@@ -132,52 +179,69 @@ namespace ChimeraTK {
   public:
     BaseDAQ(EntityOwner* owner, const std::string& name, const std::string& description, const std::string &suffix,
             uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000,
-            HierarchyModifier hierarchyModifier = HierarchyModifier::none, const std::unordered_set<std::string>& tags = {})
-        : ApplicationModule(owner, name, description, hierarchyModifier, tags), _decimationFactor(decimationFactor),
+            HierarchyModifier hierarchyModifier = HierarchyModifier::none,
+            const std::unordered_set<std::string>& tags = {}, const std::string &pathToTrigger="trigger")
+        : ApplicationModule(owner, name, description, hierarchyModifier), _decimationFactor(decimationFactor),
           _decimationThreshold(decimationThreshold),
           _daqDefaultPath((boost::filesystem::current_path()/"uDAQ").string()),
-          _suffix(suffix) {}
+          _suffix(suffix),
+          _tags(tags),
+          triggerGroup(this, pathToTrigger[0] != '/' ? "./"+pathToTrigger : pathToTrigger, tags)
+    {}
 
-    BaseDAQ() :
-        _decimationFactor(0), _decimationThreshold(0) {
-    }
+    BaseDAQ()
+    : _decimationFactor(0), _decimationThreshold(0)
+    {}
 
-    ScalarPushInput<TRIGGERTYPE> trigger { this, "trigger", "",
-        "When written, the MicroDAQ write snapshot of all variables "
-            "to the file" };
+  private:
+
+    std::unordered_set<std::string> _tags; ///< Tags to be added to all variables of the DAQ module.
+
+  public:
+
+    struct TriggerGroup : HierarchyModifyingGroup {
+      TriggerGroup(EntityOwner* owner, const std::string& pathToTrigger,
+                   const std::unordered_set<std::string>& tags = {})
+      : HierarchyModifyingGroup(owner, HierarchyModifyingGroup::getPathName(pathToTrigger), "", tags),
+        trigger{this, HierarchyModifyingGroup::getUnqualifiedName(pathToTrigger), "", "Trigger input"} {}
+
+      TriggerGroup() {}
+
+      ScalarPushInput<TRIGGERTYPE> trigger;
+    } triggerGroup;
 
     ScalarPollInput<std::string> setPath { this, "directory", "",
         "Directory where to store the DAQ data. If not set a subdirectory called uDAQ in the current directory is used.",
-        { "MicroDAQ.CONFIG" } };
+        _tags };
 
     ScalarPollInput<int> enable { this, "enable", "",
         "DAQ is active when set to 0 and disabled when set to 0.",
-        { "MicroDAQ.CONFIG" } };
+        _tags };
 
     ScalarPollInput<uint32_t> nMaxFiles { this, "nMaxFiles", "",
         "Maximum number of files in the ring buffer "
         "(oldest file will be overwritten).",
-        { "MicroDAQ.CONFIG" } };
+        _tags };
 
     ScalarPollInput<uint32_t> nTriggersPerFile { this, "nTriggersPerFile", "",
         "Number of triggers stored in each file.",
-        { "MicroDAQ.CONFIG" } };
+        _tags };
 
     ScalarOutput<std::string> currentPath { this, "currentDirectory", "",
         "Directory currently used for DAQ. To switch directories turn off DAQ and set new directory.",
-        { "MicroDAQ.STATUS" } };
+        _tags };
 
     ScalarOutput<uint32_t> currentBuffer { this, "currentBuffer", "",
         "File number currently written to. If DAQ this shows the next buffer to be used by the DAQ.",
-        { "MicroDAQ.STATUS" } };
+        _tags };
 
     ScalarOutput<uint32_t> currentEntry { this, "currentEntry", "",
         "Last entry number written. Is reset with every new file.",
-        { "MicroDAQ.STATUS" } };
+        _tags };
 
     ScalarOutput<uint32_t> errorStatus { this, "DAQError", "",
         "True in case an error occurred. Reset by toggling enable.",
-        { "MicroDAQ.STATUS" } };
+        _tags };
 
     virtual void addSource(const Module& source, const RegisterPath& namePrefix = "");
 

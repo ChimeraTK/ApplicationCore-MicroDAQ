@@ -41,13 +41,15 @@ namespace ChimeraTK {
      * before writing to the HDF5 file.
      */
     HDF5DAQ(EntityOwner* owner, const std::string& name, const std::string& description,
-        uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000, HierarchyModifier hierarchyModifier = HierarchyModifier::none,
-        const std::unordered_set<std::string>& tags = {})
-    : BaseDAQ<TRIGGERTYPE>(owner, name, description, ".h5", decimationFactor, decimationThreshold, hierarchyModifier, tags) {}
+        uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000,
+        HierarchyModifier hierarchyModifier = HierarchyModifier::none,
+        const std::unordered_set<std::string>& tags = {}, const std::string &pathToTrigger="trigger")
+    : BaseDAQ<TRIGGERTYPE>(owner, name, description, ".h5", decimationFactor, decimationThreshold, hierarchyModifier,
+                           tags, pathToTrigger) {}
 
     /** Default constructor, creates a non-working module. Can be used for late
      * initialisation. */
-    HDF5DAQ() :  BaseDAQ<TRIGGERTYPE>()  {}
+    HDF5DAQ() : BaseDAQ<TRIGGERTYPE>()  {}
 
     /**
      * Overload that calls virtualiseFromCatalog.
