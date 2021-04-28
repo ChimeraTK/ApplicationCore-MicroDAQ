@@ -46,7 +46,7 @@ include_directories(${PROJECT_SOURCE_DIR} include ${HDF5_INCLUDE_DIRS})
 #                                                                    Dictionary
 IF(ENABLE_ROOT)
   set(ROOTDICTDAQ ${PROJECT_NAME}Dict)
-  ROOT_GENERATE_DICTIONARY( ${ROOTDICTDAQ} data_types.h
+  ROOT_GENERATE_DICTIONARY( ${ROOTDICTDAQ} include/data_types.h
                                         LINKDEF include/LinkDef.h)
 ENDIF(ENABLE_ROOT)
 
