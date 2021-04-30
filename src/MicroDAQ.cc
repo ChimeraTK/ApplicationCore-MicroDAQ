@@ -122,6 +122,9 @@ namespace ChimeraTK {
     }
     nameList.push_back(variableName);
 
+    // add internal tag so we can exclude these variables in findTagAndAppendToModule()
+    tmpAccessorList.back().addTag("***MicroDAQ-internal***");
+
     // return the accessor
     return tmpAccessorList.back();
   }
@@ -330,6 +333,34 @@ namespace ChimeraTK {
     // increase current buffer number, nextBuffer will check buffer size
     currentBuffer++;
     currentBuffer.write();
+  }
+
+
+  template<typename TRIGGERTYPE>
+  void BaseDAQ<TRIGGERTYPE>::findTagAndAppendToModule(VirtualModule& virtualParent, const std::string& tag,
+      bool eliminateAllHierarchies, bool eliminateFirstHierarchy, bool negate, VirtualModule& root) const {
+    // Change behaviour to exclude the auto-generated inputs which are connected to the data sources. Otherwise those
+    // variables might get published twice to the control system, if findTag(".*") is used to connect the entire
+    // application to the control system.
+    // This is a temporary solution. In future, instead the inputs should be generated at the same place in the
+    // hierarchy as the source variable, and the connetion should not be made by the module itself. It will be rather
+    // expected from the applcation to connect everything to a ControlSystemModule. addSource() should then also be
+    // removed, and the variable household of the application should instead be scanned for variables matching the
+    // given tag (see MicroDAQ envelope class). This currently does not yet work because of a missing concept:
+    // device variables currently do not know tags and hence it would not be possible to selectively add some device
+    // variables to the DAQ without adding the entire application.
+
+    struct MyVirtualModule : VirtualModule {
+      using VirtualModule::VirtualModule;
+      using VirtualModule::findTagAndAppendToModule;
+    };
+
+    MyVirtualModule temporary("temporary", "", ModuleType::ApplicationModule);
+    EntityOwner::findTagAndAppendToModule(temporary, "\\*\\*\\*MicroDAQ-internal\\*\\*\\*", false, false, true,
+                                          temporary);
+    temporary.findTagAndAppendToModule(virtualParent, tag, eliminateAllHierarchies, eliminateFirstHierarchy, negate,
+                                       root);
+
   }
 
   INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES(BaseDAQ);

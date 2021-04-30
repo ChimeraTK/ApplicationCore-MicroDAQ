@@ -193,6 +193,9 @@ namespace ChimeraTK {
     : _decimationFactor(0), _decimationThreshold(0)
     {}
 
+    void findTagAndAppendToModule(VirtualModule& virtualParent, const std::string& tag,
+        bool eliminateAllHierarchies, bool eliminateFirstHierarchy, bool negate, VirtualModule& root) const override;
+
   private:
 
     std::unordered_set<std::string> _tags; ///< Tags to be added to all variables of the DAQ module.
