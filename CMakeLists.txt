@@ -99,7 +99,7 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND ENABLE_TESTING)
   
   if(ENABLE_HDF5)
     add_executable(test_HDF5 test/test_HDF5.C)
-    target_link_libraries(test_HDF5 ${PROJECT_NAME})
+    target_link_libraries(test_HDF5 ${PROJECT_NAME} ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES})
     set_target_properties(test_HDF5 PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
                                                LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
     add_test(test_HDF5 test_HDF5)
