@@ -338,7 +338,7 @@ namespace ChimeraTK {
 
   template<typename TRIGGERTYPE>
   void BaseDAQ<TRIGGERTYPE>::findTagAndAppendToModule(VirtualModule& virtualParent, const std::string& tag,
-      bool eliminateAllHierarchies, bool eliminateFirstHierarchy, bool negate, VirtualModule& root) const {
+      bool, bool, bool negate, VirtualModule& root) const {
     // Change behaviour to exclude the auto-generated inputs which are connected to the data sources. Otherwise those
     // variables might get published twice to the control system, if findTag(".*") is used to connect the entire
     // application to the control system.
@@ -358,8 +358,9 @@ namespace ChimeraTK {
     MyVirtualModule temporary("temporary", "", ModuleType::ApplicationModule);
     EntityOwner::findTagAndAppendToModule(temporary, "\\*\\*\\*MicroDAQ-internal\\*\\*\\*", false, false, true,
                                           temporary);
-    temporary.findTagAndAppendToModule(virtualParent, tag, eliminateAllHierarchies, eliminateFirstHierarchy, negate,
-                                       root);
+    // Eliminate all hierarchies, because otherwise we would introduce an extra level here. The MicroDAQ module has
+    // no internal sub-hierarchies, so this is ok.
+    temporary.findTagAndAppendToModule(virtualParent, tag, true, true, negate, root);
 
   }
 
