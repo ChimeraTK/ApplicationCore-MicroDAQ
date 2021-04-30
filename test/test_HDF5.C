@@ -9,11 +9,8 @@
 #define BOOST_TEST_MODULE MicroDAQTestHDF5
 
 #include <boost/filesystem.hpp>
-#include <boost/test/included/unit_test.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/mpl/list.hpp>
 #include <boost/format.hpp>
-using namespace boost::unit_test_framework;
 
 #include <string>
 #include <vector>
@@ -31,6 +28,12 @@ using namespace boost::unit_test_framework;
 #include "ChimeraTK/ApplicationCore/ScalarAccessor.h"
 
 #include "MicroDAQHDF5.h"
+
+// this include must come last
+#define BOOST_NO_EXCEPTIONS
+#include <boost/test/included/unit_test.hpp>
+using namespace boost::unit_test_framework;
+#undef BOOST_NO_EXCEPTIONS
 
 // list of user types the accessors are tested with
 typedef boost::mpl::list<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float, double> test_types;
