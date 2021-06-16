@@ -26,8 +26,6 @@
 
 namespace ChimeraTK {
 
-  INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES(MicroDAQ);
-
   template<typename TRIGGERTYPE>
   MicroDAQ<TRIGGERTYPE>::MicroDAQ(EntityOwner* owner, const std::string& name, const std::string& description,
       const std::string& inputTag,  const std::string& pathToTrigger, HierarchyModifier hierarchyModifier,
@@ -364,5 +362,6 @@ namespace ChimeraTK {
 
   }
 
+  INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES(MicroDAQ);
   INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES(BaseDAQ);
 } // namespace ChimeraTK
