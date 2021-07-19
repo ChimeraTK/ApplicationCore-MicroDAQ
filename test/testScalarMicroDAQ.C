@@ -157,6 +157,20 @@ struct testApp<std::string> : public ChimeraTK::Application {
 
 };
 
+BOOST_AUTO_TEST_CASE ( test_directory_access ){
+  testApp<int32_t> app;
+  ChimeraTK::TestFacility tf;
+  tf.setScalarDefault("nTriggersPerFile", (uint32_t)2);
+  tf.setScalarDefault("nMaxFiles", (uint32_t)5);
+  tf.setScalarDefault("enable", (int)1);
+  tf.setScalarDefault("directory", (std::string)"/var/");
+  tf.runApplication();
+
+  tf.writeScalar("Config/trigger",(int)0);
+  tf.stepApplication();
+  BOOST_CHECK_EQUAL(tf.readScalar<uint32_t>("DAQError"), 1);
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE( test_dummy, T, test_types){
   testApp<T> app;
   ChimeraTK::TestFacility tf;

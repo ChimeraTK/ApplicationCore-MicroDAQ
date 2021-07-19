@@ -201,8 +201,10 @@ namespace ChimeraTK {
         std::string filename = _owner->nextBuffer();
         // open file
         outFile = TFile::Open((_owner->_daqPath/filename).c_str(), "RECREATE");
-        outFile->SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm::kZSTD);
-        outFile->SetCompressionLevel(ROOT::RCompressionSetting::ELevel::kDefaultZSTD);
+        if(outFile){
+          outFile->SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm::kZSTD);
+          outFile->SetCompressionLevel(ROOT::RCompressionSetting::ELevel::kDefaultZSTD);
+        }
       }
       // close file and update error status for inactive DAQ
       else if(outFile && _owner->enable == 0) {
