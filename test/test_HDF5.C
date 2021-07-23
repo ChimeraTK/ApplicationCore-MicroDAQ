@@ -169,14 +169,14 @@ struct testAppArray : public ChimeraTK::Application {
 BOOST_AUTO_TEST_CASE_TEMPLATE( test_scalar, T, test_types){
   testApp<T> app;
   ChimeraTK::TestFacility tf;
-  tf.setScalarDefault("nTriggersPerFile", (uint32_t)2);
-  tf.setScalarDefault("nMaxFiles", (uint32_t)5);
-  tf.setScalarDefault("enable", (int)1);
-  tf.setScalarDefault("directory", app.dir);
+  tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
+  tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
+  tf.setScalarDefault("/MicroDAQ/enable", (int)1);
+  tf.setScalarDefault("/MicroDAQ/directory", app.dir);
   tf.runApplication();
 
   for(size_t j = 0; j < 10; j++){
-    tf.writeScalar("Config/trigger",(int)j);
+    tf.writeScalar("/Config/trigger", (int)j);
     // sleep in order not to produce data sets with the same name!
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     tf.stepApplication();
@@ -219,14 +219,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( test_scalar, T, test_types){
 BOOST_AUTO_TEST_CASE_TEMPLATE( test_array, T, test_types){
   testAppArray<T> app;
   ChimeraTK::TestFacility tf;
-  tf.setScalarDefault("nTriggersPerFile", (uint32_t)2);
-  tf.setScalarDefault("nMaxFiles", (uint32_t)5);
-  tf.setScalarDefault("enable", (int)1);
-  tf.setScalarDefault("directory", app.dir);
+  tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
+  tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
+  tf.setScalarDefault("/MicroDAQ/enable", (int)1);
+  tf.setScalarDefault("/MicroDAQ/directory", app.dir);
   tf.runApplication();
 
   for(size_t j = 0; j < 10; j++){
-    tf.writeScalar("Config/trigger",(int)j);
+    tf.writeScalar("/Config/trigger", (int)j);
     // sleep in order not to produce data sets with the same name!
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
     tf.stepApplication();

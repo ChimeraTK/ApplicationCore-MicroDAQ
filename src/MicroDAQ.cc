@@ -350,16 +350,14 @@ namespace ChimeraTK {
 
     struct MyVirtualModule : VirtualModule {
       using VirtualModule::VirtualModule;
-      using VirtualModule::findTagAndAppendToModule;
+      using VirtualModule::submodules;
     };
 
     MyVirtualModule temporary("temporary", "", ModuleType::ApplicationModule);
-    EntityOwner::findTagAndAppendToModule(temporary, "\\*\\*\\*MicroDAQ-internal\\*\\*\\*", false, false, true,
-                                          temporary);
-    // Eliminate all hierarchies, because otherwise we would introduce an extra level here. The MicroDAQ module has
-    // no internal sub-hierarchies, so this is ok.
-    temporary.findTagAndAppendToModule(virtualParent, tag, true, true, negate, root);
-
+    EntityOwner::findTagAndAppendToModule(temporary, R"(\*\*\*MicroDAQ-internal\*\*\*)", false, false, true, temporary);
+    for(auto& sm : temporary.submodules) {
+      sm.findTagAndAppendToModule(virtualParent, tag, false, false, negate, root);
+    }
   }
 
   INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES(MicroDAQ);
