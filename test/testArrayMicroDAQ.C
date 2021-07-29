@@ -44,12 +44,11 @@ template <typename UserType>
 struct DummyArray: public ChimeraTK::ApplicationModule{
   using ChimeraTK::ApplicationModule::ApplicationModule;
   ChimeraTK::ArrayOutput<UserType> out {this, "out", "", 10, "Dummy output", {"DAQ"}};
-  ChimeraTK::ScalarOutput<int> out1 {this, "outTrigger", "", "Dummy output", {"DAQ"}};
+  ChimeraTK::ScalarOutput<int> outTrigger {this, "outTrigger", "", "Dummy output"};
   ChimeraTK::ScalarPushInput<int> trigger {this, "trigger", "" ,"Trigger", {}};
   void mainLoop() override{
     out = {0,1,2,3,4,5,6,7,8,9};
-    out.write();
-    out1.write();
+    writeAll();
     while(true){
       trigger.read();
       std::transform(out.begin(), out.end(), out.begin(), [](UserType x){return x+1;});
@@ -62,12 +61,11 @@ template <>
 struct DummyArray<std::string>: public ChimeraTK::ApplicationModule{
   using ChimeraTK::ApplicationModule::ApplicationModule;
   ChimeraTK::ArrayOutput<std::string> out {this, "out", "", 10, "Dummy output", {"DAQ"}};
-  ChimeraTK::ScalarOutput<int> out1 {this, "outTrigger", "", "Dummy output", {"DAQ"}};
+  ChimeraTK::ScalarOutput<int> outTrigger {this, "outTrigger", "", "Dummy output"};
   ChimeraTK::ScalarPushInput<int> trigger {this, "trigger", "" ,"Trigger", {}};
   void mainLoop() override{
     out = {"0","1","2","3","4","5","6","7","8","9"};
-    out.write();
-    out1.write();
+    writeAll();
     while(true){
       trigger.read();
       std::transform(out.begin(), out.end(), out.begin(), [](std::string val){ return std::to_string(std::stoi(val) + 1);});
@@ -95,31 +93,16 @@ struct testAppArray : public ChimeraTK::Application {
   const uint32_t _decimation;
   const uint32_t _decimationThreshold;
 
-  ChimeraTK::ControlSystemModule cs;
-
   std::string dir;
 
   DummyArray<UserType> module{this,"Dummy","Dummy module"};
 
-  ChimeraTK::RootDAQ<int> daq{this,"test","Test", _decimation, _decimationThreshold};
-//  ChimeraTK::MicroDAQ<int> daq{this,"MicroDAQ","Test", 10, 1000};
+  ChimeraTK::RootDAQ<int> daq{this,"MicroDAQ","Test", _decimation, _decimationThreshold, ChimeraTK::HierarchyModifier::none, {} , "/Dummy/outTrigger", "test"};
 
   void defineConnections() override {
-    ChimeraTK::VariableNetworkNode trigger = cs["Config"]("trigger");
-    trigger >> module.trigger;
-    /**
-     * Don't use the trigger for the microDAQ module. If doing so it might happen,
-     * that the microDAQ module reads the latest value from the dummy module before it writes
-     * its new value. In that case the test will be interrupted as the new value written
-     * in the dummy module was not read by the microDAQ module.
-     * If using the out variable of the dummy module as trigger it is ensured
-     * that the latest value is read by the microDAQ module.
-     */
-    module.out1 >> daq.triggerGroup.trigger;
     daq.addSource(module.findTag("DAQ"),"DAQ");
-    daq.connectTo(cs);
-
-
+    ChimeraTK::ControlSystemModule cs;
+    findTag(".*").connectTo(cs);
     dumpConnections();
   }
 
@@ -153,14 +136,14 @@ myMap m(
 BOOST_AUTO_TEST_CASE_TEMPLATE( test_dummy_array, T, test_types){
   testAppArray<T> app;
   ChimeraTK::TestFacility tf;
-  tf.setScalarDefault("nTriggersPerFile", (uint32_t)2);
-  tf.setScalarDefault("nMaxFiles", (uint32_t)5);
-  tf.setScalarDefault("enable", (int)1);
-  tf.setScalarDefault("directory", app.dir);
+  tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
+  tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
+  tf.setScalarDefault("/MicroDAQ/enable", (int)1);
+  tf.setScalarDefault("/MicroDAQ/directory", app.dir);
   tf.runApplication();
 
-  for(size_t j = 0; j < 10; j++){
-    tf.writeScalar("Config/trigger",(int)j);
+  for(size_t j = 0; j < 9; j++){
+    tf.writeScalar("/Dummy/trigger",(int)j);
     tf.stepApplication();
   }
 
@@ -196,9 +179,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( test_dummy_array, T, test_types){
     ch->SetBranchAddress("DAQ.out", &p);
   }
   ch->GetEvent(4);
-  // array is 5,6,7,8,9,10,11,12,13,14
+  // array is 4,5,6,7,8,9,10,11,12,13
   for(size_t i = 0; i < 10; i++){
-    BOOST_CHECK_EQUAL(arr->GetAt(i),i+5);
+    BOOST_CHECK_EQUAL(arr->GetAt(i),i+4);
   }
 
   // remove currentBuffer and data0000.root to data0004.root and the directory uDAQ
@@ -208,14 +191,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( test_dummy_array, T, test_types){
 BOOST_AUTO_TEST_CASE( test_dummy_arrayStr){
   testAppArray<std::string> app;
   ChimeraTK::TestFacility tf;
-  tf.setScalarDefault("nTriggersPerFile", (uint32_t)2);
-  tf.setScalarDefault("nMaxFiles", (uint32_t)5);
-  tf.setScalarDefault("enable", (int)1);
-  tf.setScalarDefault("directory", app.dir);
+  tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
+  tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
+  tf.setScalarDefault("/MicroDAQ/enable", (int)1);
+  tf.setScalarDefault("/MicroDAQ/directory", app.dir);
   tf.runApplication();
 
-  for(size_t j = 0; j < 10; j++){
-    tf.writeScalar("Config/trigger",(int)j);
+  for(size_t j = 0; j < 9; j++){
+    tf.writeScalar("/Dummy/trigger",(int)j);
     tf.stepApplication();
   }
 
@@ -226,9 +209,9 @@ BOOST_AUTO_TEST_CASE( test_dummy_arrayStr){
   auto p = arr.get();
   ch->SetBranchAddress("DAQ.out", &p);
   ch->GetEvent(4);
-  // array is 5,6,7,8,9,10,11,12,13,14
+  // array is 4,5,6,7,8,9,10,11,12,13
   for(size_t i = 0; i < 10; i++){
-    BOOST_CHECK_EQUAL(arr->At(i),std::to_string(i+5));
+    BOOST_CHECK_EQUAL(arr->At(i),std::to_string(i+4));
   }
 
   // remove currentBuffer and data0000.root to data0004.root and the directory uDAQ
@@ -238,14 +221,14 @@ BOOST_AUTO_TEST_CASE( test_dummy_arrayStr){
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_decimation, T, test_types){
   testAppArray<T> app(2,5);
   ChimeraTK::TestFacility tf;
-  tf.setScalarDefault("nTriggersPerFile", (uint32_t)2);
-  tf.setScalarDefault("nMaxFiles", (uint32_t)5);
-  tf.setScalarDefault("enable", (int)1);
-  tf.setScalarDefault("directory", app.dir);
+  tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
+  tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
+  tf.setScalarDefault("/MicroDAQ/enable", (int)1);
+  tf.setScalarDefault("/MicroDAQ/directory", app.dir);
   tf.runApplication();
 
-  for(size_t j = 0; j < 10; j++){
-    tf.writeScalar("Config/trigger",(int)j);
+  for(size_t j = 0; j < 9; j++){
+    tf.writeScalar("/Dummy/trigger",(int)j);
     tf.stepApplication();
   }
   size_t t = boost::fusion::at_key<T>(m);
@@ -280,10 +263,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_decimation, T, test_types){
     ch->SetBranchAddress("DAQ.out", &p);
   }
   ch->GetEvent(1);
-  // array is 2,4,6,8,10
+  // array is 1,3,5,7,9
   BOOST_CHECK_EQUAL(arr->GetSize(), 5);
   for(size_t i = 0; i < 5; i++){
-    BOOST_CHECK_EQUAL(arr->GetAt(i),2*i+2);
+    BOOST_CHECK_EQUAL(arr->GetAt(i),2*i+1);
   }
   // remove currentBuffer and data0000.root to data0004.root and the directory uDAQ
     BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
