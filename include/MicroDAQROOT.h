@@ -45,8 +45,8 @@ namespace ChimeraTK {
       */
       RootDAQ(EntityOwner* owner, const std::string& name, const std::string& description,
              uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000, HierarchyModifier hierarchyModifier = HierarchyModifier::none,
-             const std::unordered_set<std::string>& tags = {}, const std::string &pathToTrigger="trigger")
-             : BaseDAQ<TRIGGERTYPE>(owner, name, description, ".root", decimationFactor, decimationThreshold, hierarchyModifier, tags, pathToTrigger) {
+             const std::unordered_set<std::string>& tags = {}, const std::string &pathToTrigger="trigger", const std::string &treeName="data")
+             : BaseDAQ<TRIGGERTYPE>(owner, name, description, ".root", decimationFactor, decimationThreshold, hierarchyModifier, tags, pathToTrigger), _treeName(treeName) {
         flushAfterNEntries.addTags(tags);
       }
 
@@ -64,6 +64,7 @@ namespace ChimeraTK {
      template<typename UserType>
      using BranchList = std::list<std::string>;
      TemplateUserTypeMap<BranchList>  _branchNameList;
+     std::string _treeName;
 
 
      friend struct detail::ROOTstorage<TRIGGERTYPE>;
