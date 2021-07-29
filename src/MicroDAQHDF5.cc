@@ -96,7 +96,7 @@ namespace ChimeraTK {
 
   template<typename TRIGGERTYPE>
   void HDF5DAQ<TRIGGERTYPE>::mainLoop() {
-    std::cout << "Initialising HDF5DAQ system...";
+    std::cout << "Initialising HDF5DAQ system..." << std::endl;
 
     // storage object
     detail::H5storage<TRIGGERTYPE> storage(this);
@@ -107,6 +107,9 @@ namespace ChimeraTK {
     // sort group list and make unique to make sure lower levels get created first
     storage.groupList.sort();
     storage.groupList.unique();
+
+    // write initial values
+    storage.processTrigger();
 
     // loop: process incoming triggers
     auto group = ApplicationModule::readAnyGroup();

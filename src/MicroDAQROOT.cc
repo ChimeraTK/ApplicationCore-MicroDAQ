@@ -214,7 +214,7 @@ namespace ChimeraTK {
 
       if(outFile){
         if(!tree){
-          boost::fusion::for_each(treeDataMap.table, ROOTTreeCreator<TRIGGERTYPE>(*this, _owner->getName()));
+          boost::fusion::for_each(treeDataMap.table, ROOTTreeCreator<TRIGGERTYPE>(*this, _owner->_treeName));
           tree->Branch("timeStamp", &timeStamp);
         }
         // construct time stamp
@@ -266,6 +266,9 @@ namespace ChimeraTK {
     // sort group list and make unique to make sure lower levels get created first
     storage.groupList.sort();
     storage.groupList.unique();
+
+    // write initial values
+    storage.processTrigger();
 
     // loop: process incoming triggers
     auto group = ApplicationModule::readAnyGroup();
