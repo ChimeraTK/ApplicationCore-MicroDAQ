@@ -60,6 +60,8 @@ namespace ChimeraTK {
         const std::unordered_set<std::string>& tags = {});
     MicroDAQ() {}
 
+    std::shared_ptr<BaseDAQ<TRIGGERTYPE>> getImplementation() { return impl; }
+
    protected:
 
     std::shared_ptr<BaseDAQ<TRIGGERTYPE>> impl;
@@ -203,8 +205,8 @@ namespace ChimeraTK {
   public:
 
     struct TriggerGroup : HierarchyModifyingGroup {
-      TriggerGroup(EntityOwner* owner, const std::string& pathToTrigger,
-                   const std::unordered_set<std::string>& tags = {})
+      TriggerGroup(
+          EntityOwner* owner, const std::string& pathToTrigger, const std::unordered_set<std::string>& tags = {})
       : HierarchyModifyingGroup(owner, HierarchyModifyingGroup::getPathName(pathToTrigger), "", tags),
         trigger{this, HierarchyModifyingGroup::getUnqualifiedName(pathToTrigger), "", "Trigger input"} {}
 
