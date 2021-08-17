@@ -120,7 +120,7 @@ namespace ChimeraTK {
      * is used here. */
     template<typename UserType>
     using NameList = std::list<std::string>;
-    TemplateUserTypeMap<NameList> _nameListMap;
+    TemplateUserTypeMapNoVoid<NameList> _nameListMap;
 
     /** Overall variable name list, used to detect name collisions */
     std::list<std::string> _overallVariableList;
@@ -130,7 +130,7 @@ namespace ChimeraTK {
      * AccessorAttacher. */
     template<typename UserType>
     using AccessorList = std::list<ArrayPushInput<UserType>>;
-    TemplateUserTypeMap<AccessorList> _accessorListMap;
+    TemplateUserTypeMapNoVoid<AccessorList> _accessorListMap;
 
     template<typename UserType>
     VariableNetworkNode getAccessor(const std::string& variableName);
