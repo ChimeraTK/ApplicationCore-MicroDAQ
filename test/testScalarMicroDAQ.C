@@ -72,6 +72,27 @@ struct Dummy<std::string>: public ChimeraTK::ApplicationModule{
   }
 };
 
+template <>
+struct Dummy<bool>: public ChimeraTK::ApplicationModule{
+  using ChimeraTK::ApplicationModule::ApplicationModule;
+  ChimeraTK::ScalarOutput<ChimeraTK::Boolean> out {this, "out", "", "Dummy output", {"DAQ"}};
+  ChimeraTK::ScalarOutput<int> outTrigger {this, "outTrigger", "", "Dummy output"};
+  ChimeraTK::ScalarPushInput<int> trigger {this, "trigger", "" ,"Trigger", {}};
+  void mainLoop() override{
+    // The first string will be initalized to "" instead of "0", but we don't care here
+    writeAll();
+    // Set to 1 so that the second entry will be "1"
+    int i = 1;
+    out = false;
+    while(true){
+      trigger.read();
+      out = !(ChimeraTK::Boolean)out;
+      writeAll();
+      ++i;
+    }
+  }
+};
+
 /**
  * Define a test app to test the MicroDAQModule.
  */
@@ -89,33 +110,6 @@ struct testApp : public ChimeraTK::Application {
   std::string dir;
 
   Dummy<UserType> module{this,"Dummy","Dummy module"};
-
-  ChimeraTK::RootDAQ<int> daq{this,"MicroDAQ","Test", 10, 1000, ChimeraTK::HierarchyModifier::none, {} , "/Dummy/outTrigger", "test"};
-
-  void defineConnections() override {
-    daq.addSource(module.findTag("DAQ"),"DAQ");
-    ChimeraTK::ControlSystemModule cs;
-    findTag(".*").connectTo(cs);
-    dumpConnections();
-  }
-
-};
-
-
-template<>
-struct testApp<std::string> : public ChimeraTK::Application {
-  testApp() : Application("test"){
-    char temName[] = "/tmp/uDAQ.XXXXXX";
-    char *dir_name = mkdtemp(temName);
-    dir = std::string(dir_name);
-    // new fresh directory
-    boost::filesystem::create_directory(dir);
-  }
-  ~testApp() { shutdown(); }
-
-  std::string dir;
-
-  Dummy<std::string> module{this,"Dummy","Dummy module"};
 
   ChimeraTK::RootDAQ<int> daq{this,"MicroDAQ","Test", 10, 1000, ChimeraTK::HierarchyModifier::none, {} , "/Dummy/outTrigger", "test"};
 
@@ -193,6 +187,37 @@ BOOST_AUTO_TEST_CASE( test_dummy_str){
 
   delete ch;
   delete test;
+  // remove currentBuffer and data0000.root to data0004.root and the directory uDAQ
+  BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
+}
+
+BOOST_AUTO_TEST_CASE( test_dummy_bool){
+  testApp<bool> app;
+  ChimeraTK::TestFacility tf;
+  tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
+  tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
+  tf.setScalarDefault("/MicroDAQ/enable", (int)1);
+  tf.setScalarDefault("/MicroDAQ/directory", app.dir);
+  tf.runApplication();
+
+  for(size_t j = 0; j < 9; j++){
+    tf.writeScalar("/Dummy/trigger",(int)j);
+    tf.stepApplication();
+  }
+
+  TChain* ch = new TChain("test");
+  ch->Add((app.dir+"/*.root").c_str());
+  BOOST_CHECK_NE(0, ch->GetEntries());
+  Bool_t test;
+  ch->SetBranchAddress("DAQ.out", &test);
+  ch->GetEvent(4);
+  // all even events include false, because the initial value is false.
+  BOOST_CHECK_EQUAL(test,false);
+  ch->GetEvent(5);
+  // all odd events include false, because the initial value is false.
+  BOOST_CHECK_EQUAL(test,true);
+
+  delete ch;
   // remove currentBuffer and data0000.root to data0004.root and the directory uDAQ
   BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
 }

@@ -76,6 +76,25 @@ struct DummyArray<std::string>: public ChimeraTK::ApplicationModule{
   }
 };
 
+template <>
+struct DummyArray<bool>: public ChimeraTK::ApplicationModule{
+  using ChimeraTK::ApplicationModule::ApplicationModule;
+  ChimeraTK::ArrayOutput<ChimeraTK::Boolean> out {this, "out", "", 10, "Dummy output", {"DAQ"}};
+  ChimeraTK::ScalarOutput<int> outTrigger {this, "outTrigger", "", "Dummy output"};
+  ChimeraTK::ScalarPushInput<int> trigger {this, "trigger", "" ,"Trigger", {}};
+  void mainLoop() override{
+    out = {true,false,true,false,true,false,true,false,true,false};
+    writeAll();
+    while(true){
+      trigger.read();
+      std::transform(out.begin(), out.end(), out.begin(), [](bool val){ return !val;});
+      out.write();
+      // here also out1 is written. No reason for setting a certain value
+      writeAll();
+    }
+  }
+};
+
 /**
  * Define a test app to test the MicroDAQModule.
  */
@@ -217,6 +236,43 @@ BOOST_AUTO_TEST_CASE( test_dummy_arrayStr){
   // remove currentBuffer and data0000.root to data0004.root and the directory uDAQ
   BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
 }
+
+BOOST_AUTO_TEST_CASE( test_dummy_arrayBool){
+  testAppArray<bool> app;
+  ChimeraTK::TestFacility tf;
+  tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
+  tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
+  tf.setScalarDefault("/MicroDAQ/enable", (int)1);
+  tf.setScalarDefault("/MicroDAQ/directory", app.dir);
+  tf.runApplication();
+
+  for(size_t j = 0; j < 9; j++){
+    tf.writeScalar("/Dummy/trigger",(int)j);
+    tf.stepApplication();
+  }
+
+  std::shared_ptr<TChain> ch(new TChain("test"));
+  ch->Add((app.dir+"/*.root").c_str());
+  BOOST_CHECK_NE(0, ch->GetEntries());
+  TArrayC* arr = new TArrayC();
+  ch->SetBranchAddress("DAQ.out", &arr);
+  ch->GetEvent(0);
+  std::vector<bool> test{true,false,true,false,true,false,true,false,true,false};
+  for(size_t i = 0; i < 10; i++){
+    BOOST_CHECK_EQUAL(arr->At(i), test.at(i));
+  }
+  ch->GetEvent(1);
+  for(size_t i = 0; i < 10; i++){
+    BOOST_CHECK_EQUAL(arr->At(i), !test.at(i));
+  }
+
+//  for(size_t i = 0; i < 10; i++){
+//    BOOST_CHECK_EQUAL(arr->At(i),std::to_string(i+4));
+//  }
+  // remove currentBuffer and data0000.root to data0004.root and the directory uDAQ
+  BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
+}
+
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_decimation, T, test_types){
   testAppArray<T> app(2,5);
