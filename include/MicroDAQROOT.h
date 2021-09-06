@@ -63,7 +63,7 @@ namespace ChimeraTK {
      /** Branch names - is overallVariableList with '/' replaced by '.' */
      template<typename UserType>
      using BranchList = std::list<std::string>;
-     TemplateUserTypeMap<BranchList>  _branchNameList;
+     TemplateUserTypeMapNoVoid<BranchList>  _branchNameList;
      std::string _treeName;
 
 
@@ -72,7 +72,7 @@ namespace ChimeraTK {
      friend struct detail::ROOTTreeCreator<TRIGGERTYPE>;
      friend struct detail::ROOTDataWriter<TRIGGERTYPE>;
   };
-  DECLARE_TEMPLATE_FOR_CHIMERATK_USER_TYPES(RootDAQ);
+  DECLARE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(RootDAQ);
 } // namespace ChimeraTK
 
 

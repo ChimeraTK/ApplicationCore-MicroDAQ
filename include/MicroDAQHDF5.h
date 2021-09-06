@@ -63,7 +63,7 @@ namespace ChimeraTK {
     friend struct detail::H5DataWriter<TRIGGERTYPE>;
   };
 
-  DECLARE_TEMPLATE_FOR_CHIMERATK_USER_TYPES(HDF5DAQ);
+  DECLARE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(HDF5DAQ);
 
 } // namespace ChimeraTK
 

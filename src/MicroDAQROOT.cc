@@ -48,18 +48,17 @@ namespace ChimeraTK {
        * factors. */
       template<typename UserType>
       using decimationFactorList = std::list<size_t>;
-      TemplateUserTypeMap<decimationFactorList> decimationFactorListMap;
+      TemplateUserTypeMapNoVoid<decimationFactorList> decimationFactorListMap;
 
       template<typename UserType>
       using fieldData = TreeDataFields<UserType>;
-      TemplateUserTypeMap<fieldData> treeDataMap;
+      TemplateUserTypeMapNoVoid<fieldData> treeDataMap;
 
       TTimeStamp timeStamp;
 
       bool firstTrigger{true};
 
       void processTrigger();
-      void createTree();
 
       RootDAQ<TRIGGERTYPE>* _owner;
     };
@@ -142,10 +141,10 @@ namespace ChimeraTK {
             throw ChimeraTK::logic_error((std::string("Failed to add branch for variable ") + accessor.first).c_str());
           }
         }
-        for(auto accessor = treeData.trace.begin(); accessor != treeData.trace.end(); ++accessor) {
+        for(auto &accessor : treeData.trace) {
           // determine decimation factor
-          if(_storage.tree->Branch(accessor->first.c_str(),&accessor->second) == nullptr){
-            throw ChimeraTK::logic_error((std::string("Failed to add branch for variable ") + accessor->first).c_str());
+          if(_storage.tree->Branch(accessor.first.c_str(),&accessor.second) == nullptr){
+            throw ChimeraTK::logic_error((std::string("Failed to add branch for variable ") + accessor.first).c_str());
           }
         }
       }
@@ -278,6 +277,6 @@ namespace ChimeraTK {
     }
   }
 
-  INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES(RootDAQ);
+  INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(RootDAQ);
 
 } // namespace ChimeraTK

@@ -15,6 +15,9 @@
 #include "TArrayL.h"
 #include "TArrayD.h"
 #include "TArrayI.h"
+#include "TArrayC.h"
+
+#include <ChimeraTK/SupportedUserTypes.h>
 
 #include <map>
 
@@ -93,7 +96,13 @@ namespace ChimeraTK{
     template<>
     struct TreeDataFields<std::string>{
       std::map<std::string, std::string> parameter;
-      std::map<std::string, TArrayStr > trace;
+      std::map<std::string, TArrayStr> trace;
+    };
+
+    template<>
+    struct TreeDataFields<Boolean>{
+      std::map<std::string, Bool_t> parameter;
+      std::map<std::string, TArrayC> trace;
     };
   }
 }
