@@ -17,6 +17,8 @@
 #include "TArrayI.h"
 #include "TArrayC.h"
 
+#include <string>
+
 #include <ChimeraTK/SupportedUserTypes.h>
 
 #include <map>
@@ -31,8 +33,8 @@ namespace ChimeraTK{
     private:
       std::vector<std::string> _buffer;
     public:
-      Double_t GetAt(Int_t) const override {return 1.0;}
-      void Set(Int_t i) override {_buffer.resize(i);}
+      Double_t GetAt(Int_t i) const override {return std::stod(_buffer.at(i));}
+      void Set(Int_t i) override {_buffer.resize(i); fN = i;}
       void SetAt(Double_t,Int_t) override {}
       std::string& operator[](Int_t i){return _buffer.at(i);}
       std::string operator[](Int_t i)const{return _buffer.at(i);}

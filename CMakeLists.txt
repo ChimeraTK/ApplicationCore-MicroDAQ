@@ -40,7 +40,7 @@ include(cmake/enable_latest_cxx_support.cmake)
 
 #______________________________________________________________________________
 #                                                                      Includes
-include_directories(${PROJECT_SOURCE_DIR} include ${HDF5_INCLUDE_DIRS})
+include_directories(${PROJECT_SOURCE_DIR} include ${HDF5_INCLUDE_DIRS} test)
 
 #______________________________________________________________________________
 #                                                                    Dictionary
@@ -113,9 +113,10 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND ENABLE_TESTING)
     add_test( test_ScalarMicroDAQ test_ScalarMicroDAQ)                         
                               
     add_executable(test_ArrayMicroDAQ test/testArrayMicroDAQ.C)
-    target_link_libraries(test_ArrayMicroDAQ ${PROJECT_NAME} ROOT::Tree)
+    target_link_libraries(test_ArrayMicroDAQ ${PROJECT_NAME} ROOT::Tree ${ChimeraTK-ApplicationCore_LIBRARIES})
     set_target_properties(test_ArrayMicroDAQ PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
                                                         LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
+                                               
     add_test( test_ArrayMicroDAQ test_ArrayMicroDAQ)                             
   endif(ENABLE_ROOT)                                  
   

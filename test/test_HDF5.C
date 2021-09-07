@@ -23,36 +23,17 @@
 #include "H5Cpp.h"
 
 #include "ChimeraTK/ApplicationCore/TestFacility.h"
-#include "ChimeraTK/ApplicationCore/Application.h"
 #include "ChimeraTK/ApplicationCore/ControlSystemModule.h"
-#include "ChimeraTK/ApplicationCore/ScalarAccessor.h"
 
 #include "MicroDAQHDF5.h"
+
+#include "Dummy.h"
 
 // this include must come last
 #define BOOST_NO_EXCEPTIONS
 #include <boost/test/included/unit_test.hpp>
 using namespace boost::unit_test_framework;
 #undef BOOST_NO_EXCEPTIONS
-
-// list of user types the accessors are tested with
-typedef boost::mpl::list<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float, double> test_types;
-//typedef boost::mpl::list<int32_t> test_types;
-
-template <typename UserType>
-struct Dummy: public ChimeraTK::ApplicationModule{
-  using ChimeraTK::ApplicationModule::ApplicationModule;
-  ChimeraTK::ScalarOutput<UserType> out {this, "out", "", "Dummy output", {"DAQ"}};
-  ChimeraTK::ScalarPushInput<int> trigger {this, "trigger", "" ,"Trigger", {}};
-  void mainLoop() override{
-    out.write();
-    while(true){
-      trigger.read();
-      out = out + 1;
-      out.write();
-    }
-  }
-};
 
 /**
  * Define a test app to test the MicroDAQModule.
@@ -70,7 +51,7 @@ struct testApp : public ChimeraTK::Application {
 
   Dummy<UserType> module{this,"Dummy","Dummy module"};
 
-  ChimeraTK::HDF5DAQ<UserType> daq{this,"MicroDAQ","Test of the MicroDAQ", 10, 1000, ChimeraTK::HierarchyModifier::none, {} , "/Dummy/out"};
+  ChimeraTK::HDF5DAQ<int> daq{this,"MicroDAQ","Test of the MicroDAQ", 10, 1000, ChimeraTK::HierarchyModifier::none, {} , "/Dummy/outTrigger"};
 
   std::string dir;
 
@@ -82,26 +63,6 @@ struct testApp : public ChimeraTK::Application {
     dumpConnections();
   }
 
-};
-
-template <typename UserType>
-struct DummyArray: public ChimeraTK::ApplicationModule{
-  using ChimeraTK::ApplicationModule::ApplicationModule;
-  ChimeraTK::ArrayOutput<UserType> out {this, "out", "", 10, "Dummy output", {"DAQ"}};
-  ChimeraTK::ScalarOutput<int> outTrigger {this, "outTrigger", "", "Dummy output", {"DAQ"}};
-  ChimeraTK::ScalarPushInput<int> trigger {this, "trigger", "" ,"Trigger", {}};
-
-  void mainLoop() override{
-    out = {0,1,2,3,4,5,6,7,8,9};
-    out.write();
-    outTrigger.write();
-    while(true){
-      trigger.read();
-      std::transform(out.begin(), out.end(), out.begin(), [](UserType x){return x+1;});
-      outTrigger =  outTrigger + 1;
-      writeAll();
-    }
-  }
 };
 
 /**
@@ -185,9 +146,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( test_scalar, T, test_types){
   DataSpace mspace1(rank, dims);
   std::vector<float> v(1);
   dataset.read( &v[0], PredType::NATIVE_FLOAT, mspace1, filespace );
-  BOOST_CHECK_EQUAL(v.at(0),2);
-
-  // remove currentBuffer and data0000.root to data0004.root and the directory uDAQ
+  if constexpr (std::is_same<T,bool>::value){
+    BOOST_CHECK_EQUAL(v.at(0),0);
+  } else {
+    BOOST_CHECK_EQUAL(v.at(0),2);
+  }
+  // remove currentBuffer and data0000.h5 to data0004.h5 and the directory uDAQ
   BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
 }
 
@@ -235,9 +199,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( test_array, T, test_types){
   std::vector<float> v(10);
   dataset.read( &v[0], PredType::NATIVE_FLOAT, mspace1, filespace );
 
-  std::vector<float> v_test{2,3,4,5,6,7,8,9,10,11};
-  BOOST_CHECK_EQUAL_COLLECTIONS(v.begin(), v.end(), v_test.begin(), v_test.end());
+  if constexpr (std::is_same<T,bool>::value){
+    std::vector<float> v_test{1,0,1,0,1,0,1,0,1,0};
+    BOOST_CHECK_EQUAL_COLLECTIONS(v.begin(), v.end(), v_test.begin(), v_test.end());
+  } else {
+    std::vector<float> v_test{2,3,4,5,6,7,8,9,10,11};
+    BOOST_CHECK_EQUAL_COLLECTIONS(v.begin(), v.end(), v_test.begin(), v_test.end());
+  }
 
-  // remove currentBuffer and data0000.root to data0004.root and the directory uDAQ
+  // remove currentBuffer and data0000.h5 to data0004.h5 and the directory uDAQ
   BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
 }
