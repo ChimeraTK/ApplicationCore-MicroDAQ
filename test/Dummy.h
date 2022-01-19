@@ -5,13 +5,12 @@
  *      Author: Klaus Zenker (HZDR)
  */
 
-#include "ChimeraTK/ApplicationCore/Application.h"
-#include "ChimeraTK/ApplicationCore/ScalarAccessor.h"
-#include "ChimeraTK/ApplicationCore/ArrayAccessor.h"
-
 #include <boost/mpl/list.hpp>
-typedef boost::mpl::list<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float, double, bool, std::string> test_types;
-//typedef boost::mpl::list<int32_t, bool> test_types;
+
+#include <ChimeraTK/ApplicationCore/ApplicationCore.h>
+
+typedef boost::mpl::list<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float, double, bool, std::string>
+    test_types;
 
 template <typename UserType>
 struct Dummy: public ChimeraTK::ApplicationModule{
