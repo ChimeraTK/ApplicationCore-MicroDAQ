@@ -63,7 +63,7 @@ struct Dummy<bool>: public ChimeraTK::ApplicationModule{
     out = false;
     while(true){
       trigger.read();
-      out = !(ChimeraTK::Boolean)out;
+      out = !out;
       writeAll();
       ++i;
     }
