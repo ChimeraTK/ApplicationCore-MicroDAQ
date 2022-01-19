@@ -41,6 +41,8 @@ include(cmake/enable_latest_cxx_support.cmake)
 #______________________________________________________________________________
 #                                                                      Includes
 include_directories(${PROJECT_SOURCE_DIR} include ${HDF5_INCLUDE_DIRS} test)
+file(GLOB headers "${PROJECT_SOURCE_DIR}/include/*.h")
+file(GLOB test_headers "${PROJECT_SOURCE_DIR}/test/*.h")
 
 #______________________________________________________________________________
 #                                                                    Dictionary
@@ -71,7 +73,7 @@ IF(ENABLE_ROOT)
 ENDIF(ENABLE_ROOT)
 
 # Build library that contains the MicroDAQ module to be used in ChimeraTK
-add_library( ${PROJECT_NAME} SHARED ${source_MicroDAQ})
+add_library( ${PROJECT_NAME} SHARED ${source_MicroDAQ} ${headers})
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${daq_header}")
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_FULL_LIBRARY_VERSION}
                                                  SOVERSION ${${PROJECT_NAME}_SOVERSION})
@@ -98,7 +100,7 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND ENABLE_TESTING)
   enable_testing()
   
   if(ENABLE_HDF5)
-    add_executable(test_HDF5 test/test_HDF5.C)
+    add_executable(test_HDF5 test/test_HDF5.C ${test_headers})
     target_link_libraries(test_HDF5 ${PROJECT_NAME} ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES})
     set_target_properties(test_HDF5 PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
                                                LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
@@ -106,13 +108,13 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND ENABLE_TESTING)
   endif(ENABLE_HDF5)
   
   if(ENABLE_ROOT)
-    add_executable(test_ScalarMicroDAQ test/testScalarMicroDAQ.C)
+    add_executable(test_ScalarMicroDAQ test/testScalarMicroDAQ.C ${test_headers})
     target_link_libraries(test_ScalarMicroDAQ ${PROJECT_NAME} ROOT::Tree)
     set_target_properties(test_ScalarMicroDAQ PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
                                                          LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
     add_test( test_ScalarMicroDAQ test_ScalarMicroDAQ)                         
                               
-    add_executable(test_ArrayMicroDAQ test/testArrayMicroDAQ.C)
+    add_executable(test_ArrayMicroDAQ test/testArrayMicroDAQ.C ${test_headers})
     target_link_libraries(test_ArrayMicroDAQ ${PROJECT_NAME} ROOT::Tree ${ChimeraTK-ApplicationCore_LIBRARIES})
     set_target_properties(test_ArrayMicroDAQ PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
                                                         LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
