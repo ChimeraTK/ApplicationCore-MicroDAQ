@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 2.8.12)
 
 option(ENABLE_ROOT "Add support for ROOT based DAQ" OFF)
 option(ENABLE_HDF5 "Add support for HDF5 based DAQ" ON)
-option(ENABLE_TESTING "Build tests" ON)
+option(BUILD_TESTS "Build tests" ON)
 
 #______________________________________________________________________________
 #                                                                       VERSION
@@ -96,7 +96,7 @@ ENDIF()
   
 
 find_package(Boost COMPONENTS unit_test_framework)                            
-if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND ENABLE_TESTING)
+if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
   enable_testing()
   
   if(ENABLE_HDF5)
@@ -124,7 +124,7 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND ENABLE_TESTING)
   
 else()
   message(STATUS "Boost test framework not found. No boost based tests will be build.")
-endif(Boost_UNIT_TEST_FRAMEWORK_FOUND AND ENABLE_TESTING)
+endif(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
 
 if(ENABLE_ROOT)
   INSTALL(FILES ${PROJECT_BINARY_DIR}/lib${ROOTDICTDAQ}_rdict.pcm
