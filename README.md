@@ -41,3 +41,7 @@ it is not possible to add tags to the DeviceModule.
 ## Remark on data types
 
 The data stored in the *.h5 files if always of tpye `float`. In case of the ROOT backend the ChimerTK data types are properly mapped to ROOT data types, which further reduces the file size and improoves analysis performance.
+
+## Remark on ROOT dictionary
+
+It might happen that some includes are not found by ROOT. In that case setting the environment variable `ROOT_INCLUDE_PATH=/usr/` might help, in case an error is saying that `include/data_types.h` is not found.
