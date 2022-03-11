@@ -62,6 +62,14 @@ namespace ChimeraTK {
 
     std::shared_ptr<BaseDAQ<TRIGGERTYPE>> getImplementation() { return impl; }
 
+    /**
+     * Add variable of a DeviceModule directly to the DAQ.
+     * \param source The Device module to consider.
+     * \param namePrefix This prefix is used in the root file tree. It is prepended to the register names from the device.
+     * \param submodule Use only a submodule of the device.
+     */
+    void addDeviceModule(const DeviceModule& source, const RegisterPath& namePrefix = "", const std::string& submodule = "");
+
    protected:
 
     std::shared_ptr<BaseDAQ<TRIGGERTYPE>> impl;

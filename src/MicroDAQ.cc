@@ -16,6 +16,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <ChimeraTK/ApplicationCore/ControlSystemModule.h>
+#include <ChimeraTK/ApplicationCore/DeviceModule.h>
 
 #ifdef ENABLE_HDF5
 #include "MicroDAQHDF5.h"
@@ -68,6 +69,14 @@ namespace ChimeraTK {
     impl->addSource(owner->findTag(inputTag));
   }
 
+  template<typename TRIGGERTYPE>
+  void  MicroDAQ<TRIGGERTYPE>::addDeviceModule(const DeviceModule& source, const RegisterPath& namePrefix, const std::string& submodule){
+    auto mod = source.virtualiseFromCatalog();
+    if(submodule.empty())
+      impl->addSource(mod, namePrefix);
+    else
+      impl->addSource(mod.submodule(submodule), namePrefix);
+  }
 
 
   namespace detail {
