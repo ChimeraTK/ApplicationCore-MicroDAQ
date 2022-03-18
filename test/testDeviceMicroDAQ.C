@@ -30,11 +30,13 @@ struct TriggerModule : public ChimeraTK::ApplicationModule{
   struct Out  :public ChimeraTK::VariableGroup{
     using ChimeraTK::VariableGroup::VariableGroup;
     ChimeraTK::ScalarOutput<int32_t> trigger{this, "trigger", "", "trigger used in the test", {"CS"}};
+    ChimeraTK::ScalarOutput<int32_t> test{this, "test", "", "trigger used in the test", {"CS", "DAQ"}};
   } out {this, "Trigger", "", ChimeraTK::HierarchyModifier::moveToRoot};
 
   void mainLoop() override {
     while(true){
       out.trigger = (int32_t)trigger_in;
+      out.test = (int32_t)trigger_in * 2;
       writeAll();
       readAll();
     }
@@ -51,48 +53,50 @@ struct testApp : public ChimeraTK::Application {
     dir = std::string(dir_name);
     // new fresh directory
     boost::filesystem::create_directory(dir);
-    ChimeraTK::setDMapFilePath("dummy.dmap");
   }
-  ~testApp() { shutdown(); }
+  ~testApp() override { shutdown(); }
 
   std::string dir;
-
-//  ChimeraTK::ConfigReader configReader{this, "Configuration", "device_test.xml", {"CONFIG", "CS"}};
-
-  std::vector<ChimeraTK::ConnectingDeviceModule> cdevs;
-  std::vector<ChimeraTK::MicroDAQ<int> > daq;
-//  ChimeraTK::ConnectingDeviceModule dev{this,"Dummy", "/trigger"};
-
-  TriggerModule triger{this, "Trigger Module", ""};
-
-//  ChimeraTK::MicroDAQ<int> daq{this,"MicroDAQ", "DAQ module", "DAQ", "/trigger", ChimeraTK::HierarchyModifier::none, {"CS","MicroDAQ"}};
-
-  void defineConnections() override {}
+  TriggerModule trigger{this, "TriggerModule", ""};
+  ChimeraTK::ConfigReader config{this, "Configuration", "device_test.xml"};
+  ChimeraTK::ConnectingDeviceModule dev{this,"Dummy", "/Trigger/trigger"};
+  ChimeraTK::MicroDAQ<int> daq{this,"MicroDAQ", "DAQ module", "DAQ", "/Trigger/trigger", ChimeraTK::HierarchyModifier::none};
+  void defineConnections() override {
+    ChimeraTK::ControlSystemModule cs;
+    findTag(".*").connectTo(cs);
+    daq.addDeviceModule(dev.getDeviceModule());
+    //\ToDo: Trigger is not assigned if adding device module - should work like for the history module...
+  }
+  void initialise() override {
+    Application::initialise();
+    dumpConnections();
+  }
 };
 
 
 BOOST_AUTO_TEST_CASE ( test_device_daq ){
+  ChimeraTK::BackendFactory::getInstance().setDMapFilePath("dummy.dmap");
   testApp app;
-  ChimeraTK::ControlSystemModule cs;
-  app.findTag(".*").connectTo(cs);
-//    daq.addDeviceModule(dev.getDeviceModule());
-  ChimeraTK::ConnectingDeviceModule dev{&app,"Dummy", "/trigger"};
-  app.cdevs.push_back(std::move(dev));
 
   ChimeraTK::TestFacility tf;
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
   tf.setScalarDefault("/MicroDAQ/enable", (int)1);
   tf.setScalarDefault("/MicroDAQ/directory", app.dir);
-  app.dumpConnections();
   tf.runApplication();
 
   for(size_t j = 0; j < 9; j++){
-    tf.writeScalar("/trigger",(int)j);
+    tf.writeScalar("/TriggerModule/trigger_in",(int)j);
+    tf.writeScalar("/MyModule/actuator",(int)j);
     tf.stepApplication();
   }
-  TChain* ch = new TChain("test");
+  TChain* ch = new TChain("data");
   ch->Add((app.dir+ "/*.root").c_str());
   BOOST_CHECK_NE(0, ch->GetEntries());
+  int data;
+  ch->SetBranchAddress("MyModule.actuator", &data);
+  ch->GetEvent(5);
+  // initial value is 0, first value is 0, 5th entry is 3
+  BOOST_CHECK_EQUAL(data, 3);
   BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
 }
