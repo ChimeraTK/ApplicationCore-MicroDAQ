@@ -23,8 +23,6 @@ include(${CMAKE_SOURCE_DIR}/cmake/set_default_build_to_release.cmake)
 #                                                                  Dependencies
 include(cmake/add_dependency.cmake)
 add_dependency(ChimeraTK-ApplicationCore 02.05 REQUIRED)
-# CS is used in the tests
-add_dependency(ChimeraTK-ControlSystemAdapter 02.03 REQUIRED)
 
 IF(ENABLE_HDF5)
   FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C CXX HL)
@@ -117,9 +115,9 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
     add_test( test_ScalarMicroDAQ test_ScalarMicroDAQ)                         
                               
     add_executable(test_ArrayMicroDAQ test/testArrayMicroDAQ.C ${test_headers})
-    target_link_libraries(test_ArrayMicroDAQ ${PROJECT_NAME} ROOT::Tree ${ChimeraTK-ApplicationCore_LIBRARIES} ${ChimeraTK-ControlSystemAdapter_LIBRARIES})
+    target_link_libraries(test_ArrayMicroDAQ ${PROJECT_NAME} ROOT::Tree ${ChimeraTK-ApplicationCore_LIBRARIES})
     set_target_properties(test_ArrayMicroDAQ PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
-                                                        LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS} ${ChimeraTK-ControlSystemAdapter_LINK_FLAGS}")
+                                                        LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
     add_test( test_ArrayMicroDAQ test_ArrayMicroDAQ)                             
 
     FILE(COPY ${CMAKE_SOURCE_DIR}/test/dummy.dmap
