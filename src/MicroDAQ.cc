@@ -93,8 +93,6 @@ namespace ChimeraTK {
         // only continue if the call is for the right type
         if(typeid(typename PAIR::first_type) != _feeder.getValueType()) return;
 
-        std::cout << "Feeder name: " << _feeder.getQualifiedName() << " short name " << _feeder.getName() << " type: " << (int)_feeder.getMode()
-            << " direction: " << (int)_feeder.getDirection().dir << std::endl;
         // register connection
         if(_feeder.getMode() == UpdateMode::poll && _feeder.getDirection().dir == VariableDirection::feeding)
           _feeder[_owner->triggerGroup.trigger] >> _owner->template getAccessor<typename PAIR::first_type>(_name);
