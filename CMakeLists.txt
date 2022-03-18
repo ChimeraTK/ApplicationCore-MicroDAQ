@@ -124,6 +124,7 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
 
     FILE(COPY ${CMAKE_SOURCE_DIR}/test/dummy.dmap
               ${CMAKE_SOURCE_DIR}/test/dummy.map
+              ${CMAKE_SOURCE_DIR}/test/dummy.xlmap
               ${CMAKE_SOURCE_DIR}/test/device_test.xml
          DESTINATION ${PROJECT_BINARY_DIR})
 

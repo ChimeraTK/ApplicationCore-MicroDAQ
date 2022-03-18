@@ -93,8 +93,13 @@ namespace ChimeraTK {
         // only continue if the call is for the right type
         if(typeid(typename PAIR::first_type) != _feeder.getValueType()) return;
 
+        std::cout << "Feeder name: " << _feeder.getQualifiedName() << " short name " << _feeder.getName() << " type: " << (int)_feeder.getMode() << std::endl;
+
         // register connection
-        _feeder >> _owner->template getAccessor<typename PAIR::first_type>(_name);
+        if(_feeder.getMode() == UpdateMode::poll)
+          _feeder[_owner->triggerGroup.trigger] >> _owner->template getAccessor<typename PAIR::first_type>(_name);
+        else
+          _feeder >> _owner->template getAccessor<typename PAIR::first_type>(_name);
       }
 
       VariableNetworkNode& _feeder;

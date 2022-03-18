@@ -57,6 +57,7 @@ struct testApp : public ChimeraTK::Application {
   ~testApp() override { shutdown(); }
 
   std::string dir;
+  // somehow without an module the application does not start...
   TriggerModule trigger{this, "TriggerModule", ""};
   ChimeraTK::ConfigReader config{this, "Configuration", "device_test.xml"};
   ChimeraTK::ConnectingDeviceModule dev{this,"Dummy", "/Trigger/trigger"};
@@ -65,7 +66,6 @@ struct testApp : public ChimeraTK::Application {
     ChimeraTK::ControlSystemModule cs;
     findTag(".*").connectTo(cs);
     daq.addDeviceModule(dev.getDeviceModule());
-    //\ToDo: Trigger is not assigned if adding device module - should work like for the history module...
   }
   void initialise() override {
     Application::initialise();
@@ -78,6 +78,9 @@ BOOST_AUTO_TEST_CASE ( test_device_daq ){
   ChimeraTK::BackendFactory::getInstance().setDMapFilePath("dummy.dmap");
   testApp app;
 
+  ChimeraTK::Device dev;
+  dev.open("Dummy-Raw");
+  auto readback = dev.getScalarRegisterAccessor<int>("/MyModule/readback");
   ChimeraTK::TestFacility tf;
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
@@ -88,15 +91,19 @@ BOOST_AUTO_TEST_CASE ( test_device_daq ){
   for(size_t j = 0; j < 9; j++){
     tf.writeScalar("/TriggerModule/trigger_in",(int)j);
     tf.writeScalar("/MyModule/actuator",(int)j);
+    readback = (int)j;
+    readback.write();
     tf.stepApplication();
   }
   TChain* ch = new TChain("data");
   ch->Add((app.dir+ "/*.root").c_str());
   BOOST_CHECK_NE(0, ch->GetEntries());
-  int data;
-  ch->SetBranchAddress("MyModule.actuator", &data);
+  int data[2];
+  ch->SetBranchAddress("MyModule.actuator", &data[0]);
+  ch->SetBranchAddress("MyModule.readback", &data[1]);
   ch->GetEvent(5);
   // initial value is 0, first value is 0, 5th entry is 3
-  BOOST_CHECK_EQUAL(data, 3);
+  BOOST_CHECK_EQUAL(data[0], 3);
+  BOOST_CHECK_EQUAL(data[1], 3);
   BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
 }

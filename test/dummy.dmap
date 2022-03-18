@@ -1,1 +1,2 @@
-Dummy (sharedMemoryDummy:1?map=dummy.map)
+Dummy-Raw (sharedMemoryDummy:1?map=dummy.map)
+Dummy (logicalNameMap:Dummy-Raw?map=dummy.xlmap)

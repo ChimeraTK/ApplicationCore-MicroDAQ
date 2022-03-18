@@ -1,0 +1,14 @@
+<logicalNameMap>
+  <module name="MyModule">
+    <redirectedRegister name="actuator">
+      <targetDevice>Dummy-Raw</targetDevice>
+      <targetRegister>MyModule.actuator</targetRegister>
+    </redirectedRegister>
+    <redirectedRegister name="readback">
+      <targetDevice>Dummy-Raw</targetDevice>
+      <targetRegister>MyModule.readback</targetRegister>
+      <plugin name="forceReadOnly"></plugin>
+    </redirectedRegister>
+  </module>
+</logicalNameMap>
+   
