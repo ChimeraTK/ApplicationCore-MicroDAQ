@@ -94,10 +94,15 @@ namespace ChimeraTK {
         if(typeid(typename PAIR::first_type) != _feeder.getValueType()) return;
 
         // register connection
-        if(_feeder.getMode() == UpdateMode::poll && _feeder.getDirection().dir == VariableDirection::feeding)
-          _feeder[_owner->triggerGroup.trigger] >> _owner->template getAccessor<typename PAIR::first_type>(_name);
-        else
-          _feeder >> _owner->template getAccessor<typename PAIR::first_type>(_name);
+        try{
+          if(_feeder.getMode() == UpdateMode::poll && _feeder.getDirection().dir == VariableDirection::feeding)
+            _feeder[_owner->triggerGroup.trigger] >> _owner->template getAccessor<typename PAIR::first_type>(_name);
+          else
+            _feeder >> _owner->template getAccessor<typename PAIR::first_type>(_name);
+        } catch (ChimeraTK::logic_error& e){
+          std::cout << "Failed to add accessor with name: " << _name << ", because it is already registered for DAQ." << std::endl;
+          return;
+        }
       }
 
       VariableNetworkNode& _feeder;
