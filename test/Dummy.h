@@ -20,6 +20,7 @@ struct Dummy: public ChimeraTK::ApplicationModule{
   ChimeraTK::ScalarPushInput<int> trigger {this, "trigger", "" ,"Trigger", {}};
   void mainLoop() override{
     out = 0;
+    // This also writes outTrigger!
     writeAll();
     while(true){
       trigger.read();
