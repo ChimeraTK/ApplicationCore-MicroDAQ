@@ -82,7 +82,7 @@ namespace ChimeraTK {
   namespace detail {
 
     /** Callable class for use with  boost::fusion::for_each: Attach the given
-     * accessor to the HDF5DAQ with proper handling of the UserType. */
+     * accessor to the DAQ with proper handling of the UserType. */
     template<typename TRIGGERTYPE>
     struct BaseDAQAccessorAttacher {
       BaseDAQAccessorAttacher(VariableNetworkNode& feeder, BaseDAQ<TRIGGERTYPE>* owner, const std::string& name)
@@ -350,7 +350,6 @@ namespace ChimeraTK {
     currentBuffer.write();
   }
 
-
   template<typename TRIGGERTYPE>
   void BaseDAQ<TRIGGERTYPE>::findTagAndAppendToModule(VirtualModule& virtualParent, const std::string& tag,
       bool, bool, bool negate, VirtualModule& root) const {
@@ -358,8 +357,8 @@ namespace ChimeraTK {
     // variables might get published twice to the control system, if findTag(".*") is used to connect the entire
     // application to the control system.
     // This is a temporary solution. In future, instead the inputs should be generated at the same place in the
-    // hierarchy as the source variable, and the connetion should not be made by the module itself. It will be rather
-    // expected from the applcation to connect everything to a ControlSystemModule. addSource() should then also be
+    // hierarchy as the source variable, and the connection should not be made by the module itself. It will be rather
+    // expected from the application to connect everything to a ControlSystemModule. addSource() should then also be
     // removed, and the variable household of the application should instead be scanned for variables matching the
     // given tag (see MicroDAQ envelope class). This currently does not yet work because of a missing concept:
     // device variables currently do not know tags and hence it would not be possible to selectively add some device
