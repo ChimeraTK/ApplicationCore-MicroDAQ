@@ -61,6 +61,13 @@ namespace ChimeraTK {
       void processTrigger();
 
       RootDAQ<TRIGGERTYPE>* _owner;
+
+      /**
+       *  Collect all accessors that use the DAQ trigger as external trigger.
+       *  This does not really belong to storage but since we iterate over all accessors here
+       *  we include that step here.
+       */
+      std::vector<TransferElementID> _accessorsWithTrigger;
     };
 
 
@@ -82,6 +89,17 @@ namespace ChimeraTK {
         // iterate through all accessors for this UserType
         auto name = nameList.begin();
         for(auto accessor = accessorList.begin(); accessor != accessorList.end(); ++accessor, ++name) {
+          // Find out if accessor has external trigger and if it is the DAQ trigger
+          auto network =  &((VariableNetworkNode)*accessor).getOwner();
+          auto triggerNode = &(dynamic_cast<BaseDAQ<TRIGGERTYPE>*>(_storage._owner)->triggerGroup.trigger);
+          // check if network has external trigger
+          if(network->getTriggerType() == VariableNetwork::TriggerType::external){
+            // check if external trigger is the DAQ trigger
+            if(network->getFeedingNode().getExternalTrigger() == (VariableNetworkNode)*triggerNode){
+              _storage._accessorsWithTrigger.push_back(accessor->getId());
+            }
+          }
+
           // determine decimation factor
           int factor = 1;
           if(accessor->getNElements() > _storage._owner->_decimationThreshold) {
@@ -259,8 +277,11 @@ namespace ChimeraTK {
     // storage object
     detail::ROOTstorage<TRIGGERTYPE> storage(this);
 
-    // create the data spaces
+    // create the data spaces and look for accessors using the DAQ trigger as external node
     boost::fusion::for_each(BaseDAQ<TRIGGERTYPE>::_accessorListMap.table, detail::ROOTDataSpaceCreator<TRIGGERTYPE>(storage));
+
+    // add trigger
+    storage._accessorsWithTrigger.push_back(BaseDAQ<TRIGGERTYPE>::triggerGroup.trigger.getId());
 
     // sort group list and make unique to make sure lower levels get created first
     storage.groupList.sort();
@@ -272,7 +293,8 @@ namespace ChimeraTK {
     // loop: process incoming triggers
     auto group = ApplicationModule::readAnyGroup();
     while(true) {
-      group.readUntil(BaseDAQ<TRIGGERTYPE>::triggerGroup.trigger.getId());
+      // Wait for the DAQ trigger and an update of all accessors using the DAQ trigger as external node
+      group.readUntilAll(storage._accessorsWithTrigger);
       storage.processTrigger();
     }
   }

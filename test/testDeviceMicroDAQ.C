@@ -14,6 +14,7 @@
 
 
 #include "MicroDAQROOT.h"
+#include "Dummy.h"
 
 #include "TChain.h"
 
@@ -23,25 +24,6 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/fusion/container/map.hpp>
 using namespace boost::unit_test_framework;
-
-struct TriggerModule : public ChimeraTK::ApplicationModule{
-  using ChimeraTK::ApplicationModule::ApplicationModule;
-  ChimeraTK::ScalarPushInput<int32_t> trigger_in{this, "trigger_in", "", "trigger used in the test"};
-  struct Out  :public ChimeraTK::VariableGroup{
-    using ChimeraTK::VariableGroup::VariableGroup;
-    ChimeraTK::ScalarOutput<int32_t> trigger{this, "trigger", "", "trigger used in the test", {"CS"}};
-    ChimeraTK::ScalarOutput<int32_t> test{this, "test", "", "trigger used in the test", {"CS", "DAQ"}};
-  } out {this, "Trigger", "", ChimeraTK::HierarchyModifier::moveToRoot};
-
-  void mainLoop() override {
-    while(true){
-      out.trigger = (int32_t)trigger_in;
-      out.test = (int32_t)trigger_in * 2;
-      writeAll();
-      readAll();
-    }
-  }
-};
 
 /**
  * Define a test app to test the MicroDAQModule.
@@ -58,10 +40,10 @@ struct testApp : public ChimeraTK::Application {
 
   std::string dir;
   // somehow without an module the application does not start...
-  TriggerModule trigger{this, "TriggerModule", ""};
+  Dummy<int32_t> module{this, "Dummy", "Module used as trigger"};
   ChimeraTK::ConfigReader config{this, "Configuration", "device_test.xml"};
-  ChimeraTK::ConnectingDeviceModule dev{this,"Dummy", "/Trigger/trigger"};
-  ChimeraTK::MicroDAQ<int> daq{this,"MicroDAQ", "DAQ module", "DAQ", "/Trigger/trigger", ChimeraTK::HierarchyModifier::none};
+  ChimeraTK::ConnectingDeviceModule dev{this,"Dummy", "/Dummy/outTrigger"};
+  ChimeraTK::MicroDAQ<int> daq{this,"MicroDAQ", "DAQ module", "DAQ", "/Dummy/outTrigger", ChimeraTK::HierarchyModifier::none};
   void defineConnections() override {
     ChimeraTK::ControlSystemModule cs;
     findTag(".*").connectTo(cs);
@@ -87,23 +69,25 @@ BOOST_AUTO_TEST_CASE ( test_device_daq ){
   tf.setScalarDefault("/MicroDAQ/enable", (int)1);
   tf.setScalarDefault("/MicroDAQ/directory", app.dir);
   tf.runApplication();
-
   for(size_t j = 0; j < 9; j++){
-    tf.writeScalar("/TriggerModule/trigger_in",(int)j);
-    tf.writeScalar("/MyModule/actuator",(int)j);
-    readback = (int)j;
+    // initial value is already written to file at this point - so the next entry should be 1 and not 0!
+    // in the dummy this is realised by calling out = out+1
+    tf.writeScalar("/MyModule/actuator",(int)(j+1));
+    readback = (int)(j+1);
     readback.write();
+    tf.writeScalar("/Dummy/trigger",(int)j);
     tf.stepApplication();
   }
   TChain* ch = new TChain("data");
   ch->Add((app.dir+ "/*.root").c_str());
   BOOST_CHECK_NE(0, ch->GetEntries());
-  int data[2];
+  int data[3];
   ch->SetBranchAddress("MyModule.actuator", &data[0]);
   ch->SetBranchAddress("MyModule.readback", &data[1]);
+  ch->SetBranchAddress("Dummy.out", &data[2]);
   ch->GetEvent(5);
-  // initial value is 0, first value is 0, 5th entry is 3
-  BOOST_CHECK_EQUAL(data[0], 3);
-  BOOST_CHECK_EQUAL(data[1], 3);
+
+  for(size_t i =0; i < 3; i++)
+    BOOST_CHECK_EQUAL(data[i], 5);
   BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
 }
