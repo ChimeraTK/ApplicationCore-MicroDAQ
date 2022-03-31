@@ -89,15 +89,9 @@ namespace ChimeraTK {
         // iterate through all accessors for this UserType
         auto name = nameList.begin();
         for(auto accessor = accessorList.begin(); accessor != accessorList.end(); ++accessor, ++name) {
-          // Find out if accessor has external trigger and if it is the DAQ trigger
-          auto network =  &((VariableNetworkNode)*accessor).getOwner();
-          auto triggerNode = &(dynamic_cast<BaseDAQ<TRIGGERTYPE>*>(_storage._owner)->triggerGroup.trigger);
-          // check if network has external trigger
-          if(network->getTriggerType() == VariableNetwork::TriggerType::external){
-            // check if external trigger is the DAQ trigger
-            if(network->getFeedingNode().getExternalTrigger() == (VariableNetworkNode)*triggerNode){
-              _storage._accessorsWithTrigger.push_back(accessor->getId());
-            }
+          // check if accessor uses DAQ trigger as external trigger
+          if(_storage._owner->isAccessorUsingDAQTrigger(*accessor)){
+            _storage._accessorsWithTrigger.push_back(accessor->getId());
           }
 
           // determine decimation factor

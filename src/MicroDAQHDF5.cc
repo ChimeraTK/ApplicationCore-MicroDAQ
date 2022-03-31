@@ -45,6 +45,13 @@ namespace ChimeraTK {
       void writeData();
 
       HDF5DAQ<TRIGGERTYPE>* _owner;
+
+      /**
+       *  Collect all accessors that use the DAQ trigger as external trigger.
+       *  This does not really belong to storage but since we iterate over all accessors here
+       *  we include that step here.
+       */
+      std::vector<TransferElementID> _accessorsWithTrigger;
     };
 
     /*********************************************************************************************************************/
@@ -66,6 +73,10 @@ namespace ChimeraTK {
         // iterate through all accessors for this UserType
         auto name = nameList.begin();
         for(auto accessor = accessorList.begin(); accessor != accessorList.end(); ++accessor, ++name) {
+          // check if accessor uses DAQ trigger as external trigger
+          if(_storage._owner->isAccessorUsingDAQTrigger(*accessor)){
+            _storage._accessorsWithTrigger.push_back(accessor->getId());
+          }
           // determine decimation factor
           int factor = 1;
           if(accessor->getNElements() > _storage._owner->_decimationThreshold) {
@@ -104,6 +115,9 @@ namespace ChimeraTK {
     // create the data spaces
     boost::fusion::for_each(BaseDAQ<TRIGGERTYPE>::_accessorListMap.table, detail::H5DataSpaceCreator<TRIGGERTYPE>(storage));
 
+    // add trigger
+    storage._accessorsWithTrigger.push_back(BaseDAQ<TRIGGERTYPE>::triggerGroup.trigger.getId());
+
     // sort group list and make unique to make sure lower levels get created first
     storage.groupList.sort();
     storage.groupList.unique();
@@ -114,7 +128,8 @@ namespace ChimeraTK {
     // loop: process incoming triggers
     auto group = ApplicationModule::readAnyGroup();
     while(true) {
-      group.readUntil(BaseDAQ<TRIGGERTYPE>::triggerGroup.trigger.getId());
+      // Wait for the DAQ trigger and an update of all accessors using the DAQ trigger as external node
+      group.readUntilAll(storage._accessorsWithTrigger);
       storage.processTrigger();
     }
   }

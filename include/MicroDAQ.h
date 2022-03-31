@@ -84,6 +84,8 @@ namespace ChimeraTK {
   class BaseDAQ: public ApplicationModule {
   private:
 
+    std::unordered_set<std::string> _tags; ///< Tags to be added to all variables of the DAQ module.
+
     /**
      * Delete file corresponding to currentBuffer from the ringbuffer.
      */
@@ -185,17 +187,15 @@ namespace ChimeraTK {
      */
     void disableDAQ();
 
-
   public:
     BaseDAQ(EntityOwner* owner, const std::string& name, const std::string& description, const std::string &suffix,
             uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000,
             HierarchyModifier hierarchyModifier = HierarchyModifier::none,
             const std::unordered_set<std::string>& tags = {}, const std::string &pathToTrigger="trigger")
-        : ApplicationModule(owner, name, description, hierarchyModifier), _decimationFactor(decimationFactor),
+        : ApplicationModule(owner, name, description, hierarchyModifier), _tags(tags), _decimationFactor(decimationFactor),
           _decimationThreshold(decimationThreshold),
           _daqDefaultPath((boost::filesystem::current_path()/"uDAQ").string()),
           _suffix(suffix),
-          _tags(tags),
           triggerGroup(this, pathToTrigger[0] != '/' ? "./"+pathToTrigger : pathToTrigger, tags)
     {}
 
@@ -206,11 +206,26 @@ namespace ChimeraTK {
     void findTagAndAppendToModule(VirtualModule& virtualParent, const std::string& tag,
         bool eliminateAllHierarchies, bool eliminateFirstHierarchy, bool negate, VirtualModule& root) const override;
 
-  private:
-
-    std::unordered_set<std::string> _tags; ///< Tags to be added to all variables of the DAQ module.
-
-  public:
+    /**
+     * Check if accessor uses the DAQ trigger as external trigger.
+     *
+     * In that case it has to be updated as well as the trigger before reading
+     * data by the DAQ.
+     */
+    template <typename UserType>
+    bool isAccessorUsingDAQTrigger(const ArrayPushInput<UserType> &accessor){
+      // Find out if accessor has external trigger and if it is the DAQ trigger
+      auto network =  &((VariableNetworkNode)accessor).getOwner();
+      auto triggerNode = &(triggerGroup.trigger);
+      // check if network has external trigger
+      if(network->getTriggerType() == VariableNetwork::TriggerType::external){
+        // check if external trigger is the DAQ trigger
+        if(network->getFeedingNode().getExternalTrigger() == (VariableNetworkNode)*triggerNode){
+          return true;
+        }
+      }
+      return false;
+    }
 
     struct TriggerGroup : HierarchyModifyingGroup {
       TriggerGroup(
@@ -258,7 +273,7 @@ namespace ChimeraTK {
 
     virtual void addSource(const Module& source, const RegisterPath& namePrefix = "");
 
-    virtual void mainLoop() = 0;
+    virtual void mainLoop() override = 0;
 
     friend struct detail::BaseDAQAccessorAttacher<TRIGGERTYPE>;
   };
