@@ -98,13 +98,25 @@ ENDIF()
 find_package(Boost COMPONENTS unit_test_framework)                            
 if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
   enable_testing()
-  
+  FILE(COPY ${CMAKE_SOURCE_DIR}/test/dummy.dmap
+          ${CMAKE_SOURCE_DIR}/test/dummy.map
+          ${CMAKE_SOURCE_DIR}/test/dummy.xlmap
+          ${CMAKE_SOURCE_DIR}/test/device_test_ROOT.xml
+          ${CMAKE_SOURCE_DIR}/test/device_test_HDF5.xml
+     DESTINATION ${PROJECT_BINARY_DIR})
   if(ENABLE_HDF5)
     add_executable(test_HDF5 test/test_HDF5.C ${test_headers})
     target_link_libraries(test_HDF5 ${PROJECT_NAME} ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES})
     set_target_properties(test_HDF5 PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
                                                LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
     add_test(test_HDF5 test_HDF5)
+    
+    FILE(COPY ${CMAKE_SOURCE_DIR}/test/device_test_HDF5.xml DESTINATION ${PROJECT_BINARY_DIR})
+    add_executable(test_Device_HDF5 test/testDevice_HDF5.C ${test_headers})
+    target_link_libraries(test_Device_HDF5 ${PROJECT_NAME} ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${ChimeraTK-ApplicationCore_LIBRARIES})
+    set_target_properties(test_Device_HDF5 PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
+                                                    LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
+    add_test( test_Device_HDF5 test_Device_HDF5)     
   endif(ENABLE_HDF5)
   
   if(ENABLE_ROOT)
@@ -120,17 +132,13 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
                                                         LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
     add_test( test_ArrayMicroDAQ test_ArrayMicroDAQ)                             
 
-    FILE(COPY ${CMAKE_SOURCE_DIR}/test/dummy.dmap
-              ${CMAKE_SOURCE_DIR}/test/dummy.map
-              ${CMAKE_SOURCE_DIR}/test/dummy.xlmap
-              ${CMAKE_SOURCE_DIR}/test/device_test.xml
-         DESTINATION ${PROJECT_BINARY_DIR})
+    FILE(COPY ${CMAKE_SOURCE_DIR}/test/device_test_ROOT.xml DESTINATION ${PROJECT_BINARY_DIR})
 
-    add_executable(test_DeviceDAQ test/testDeviceMicroDAQ.C ${test_headers})
-    target_link_libraries(test_DeviceDAQ ${PROJECT_NAME} ROOT::Tree ${ChimeraTK-ApplicationCore_LIBRARIES})
-    set_target_properties(test_DeviceDAQ PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
+    add_executable(test_Device_ROOT test/testDevice_ROOT.C ${test_headers})
+    target_link_libraries(test_Device_ROOT ${PROJECT_NAME} ROOT::Tree ${ChimeraTK-ApplicationCore_LIBRARIES})
+    set_target_properties(test_Device_ROOT PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
                                                     LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
-    add_test( test_DeviceDAQ test_DeviceDAQ)                             
+    add_test( test_Device_ROOT test_Device_ROOT)                             
 
 
   endif(ENABLE_ROOT)                                  

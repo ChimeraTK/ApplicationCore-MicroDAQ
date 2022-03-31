@@ -7,58 +7,32 @@
 
 #define BOOST_TEST_MODULE MicroDAQDeviceTest
 
+#include <memory>
+
 #include "ChimeraTK/ApplicationCore/TestFacility.h"
 #include "ChimeraTK/ApplicationCore/ControlSystemModule.h"
 #include "ChimeraTK/ApplicationCore/DeviceModule.h"
 #include "ChimeraTK/ApplicationCore/ScalarAccessor.h"
 
-
 #include "MicroDAQROOT.h"
+
+#include "H5Cpp.h"
 #include "Dummy.h"
 
 #include "TChain.h"
 
 #include <boost/test/included/unit_test.hpp>
 #include <boost/thread.hpp>
+#include <boost/format.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/fusion/container/map.hpp>
 using namespace boost::unit_test_framework;
 
-/**
- * Define a test app to test the MicroDAQModule.
- */
-struct testApp : public ChimeraTK::Application {
-  testApp() : Application("test"){
-    char temName[] = "/tmp/uDAQ.XXXXXX";
-    char *dir_name = mkdtemp(temName);
-    dir = std::string(dir_name);
-    // new fresh directory
-    boost::filesystem::create_directory(dir);
-  }
-  ~testApp() override { shutdown(); }
-
-  std::string dir;
-  // somehow without an module the application does not start...
-  Dummy<int32_t> module{this, "Dummy", "Module used as trigger"};
-  ChimeraTK::ConfigReader config{this, "Configuration", "device_test.xml"};
-  ChimeraTK::ConnectingDeviceModule dev{this,"Dummy", "/Dummy/outTrigger"};
-  ChimeraTK::MicroDAQ<int> daq{this,"MicroDAQ", "DAQ module", "DAQ", "/Dummy/outTrigger", ChimeraTK::HierarchyModifier::none};
-  void defineConnections() override {
-    ChimeraTK::ControlSystemModule cs;
-    findTag(".*").connectTo(cs);
-    daq.addDeviceModule(dev.getDeviceModule());
-  }
-  void initialise() override {
-    Application::initialise();
-    dumpConnections();
-  }
-};
-
 
 BOOST_AUTO_TEST_CASE ( test_device_daq ){
   ChimeraTK::BackendFactory::getInstance().setDMapFilePath("dummy.dmap");
-  testApp app;
+  DeviceDummyApp app("device_test_ROOT.xml");
 
   ChimeraTK::Device dev;
   dev.open("Dummy-Raw");

@@ -9,6 +9,8 @@
 
 #include <ChimeraTK/ApplicationCore/ApplicationCore.h>
 
+#include "MicroDAQ.h"
+
 typedef boost::mpl::list<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float, double, bool, std::string>
     test_types;
 
@@ -127,6 +129,38 @@ struct DummyArray<bool>: public ChimeraTK::ApplicationModule{
       outTrigger =  outTrigger + 1;
       writeAll();
     }
+  }
+};
+
+/**
+ * Define a test app to test the MicroDAQModule.
+ */
+struct DeviceDummyApp : public ChimeraTK::Application {
+  DeviceDummyApp(const std::string& configFile) : Application("test"){
+    char temName[] = "/tmp/uDAQ.XXXXXX";
+    char *dir_name = mkdtemp(temName);
+    dir = std::string(dir_name);
+    // new fresh directory
+    boost::filesystem::create_directory(dir);
+    config.reset(new ChimeraTK::ConfigReader{this, "Configuration", configFile});
+    daq = ChimeraTK::MicroDAQ<int>{this,"MicroDAQ", "DAQ module", "DAQ", "/Dummy/outTrigger", ChimeraTK::HierarchyModifier::none};
+  }
+  ~DeviceDummyApp() override { shutdown(); }
+
+  std::string dir;
+  // somehow without an module the application does not start...
+  Dummy<int32_t> module{this, "Dummy", "Module used as trigger"};
+  std::unique_ptr<ChimeraTK::ConfigReader> config;
+  ChimeraTK::ConnectingDeviceModule dev{this,"Dummy", "/Dummy/outTrigger"};
+  ChimeraTK::MicroDAQ<int> daq;
+  void defineConnections() override {
+    ChimeraTK::ControlSystemModule cs;
+    findTag(".*").connectTo(cs);
+    daq.addDeviceModule(dev.getDeviceModule());
+  }
+  void initialise() override {
+    Application::initialise();
+    dumpConnections();
   }
 };
 
