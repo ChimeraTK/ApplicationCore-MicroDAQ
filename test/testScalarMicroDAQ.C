@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE ( test_directory_access ){
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
   tf.setScalarDefault("/MicroDAQ/enable", (int)1);
-  tf.setScalarDefault("/MicroDAQ/directory", (std::string)"/var/");
+  tf.setScalarDefault("/MicroDAQ/directory", (std::string)"/NonExistingFolder/");
   tf.runApplication();
 
   tf.writeScalar("/Dummy/trigger",(int)0);
