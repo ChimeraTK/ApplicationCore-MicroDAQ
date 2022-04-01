@@ -61,7 +61,8 @@ BOOST_AUTO_TEST_CASE ( test_device_daq ){
   ch->SetBranchAddress("Dummy.out", &data[2]);
   ch->GetEvent(5);
 
-  for(size_t i =0; i < 3; i++)
-    BOOST_CHECK_EQUAL(data[i], 5);
+  BOOST_CHECK_EQUAL(data[0], 5);
+  BOOST_CHECK_EQUAL(data[1], 5);
+  BOOST_CHECK_EQUAL(data[2], 5);
   BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
 }
