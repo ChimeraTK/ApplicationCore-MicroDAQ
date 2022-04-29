@@ -48,6 +48,10 @@ file(GLOB test_headers "${PROJECT_SOURCE_DIR}/test/*.h")
 #                                                                    Dictionary
 IF(ENABLE_ROOT)
   set(ROOTDICTDAQ ${PROJECT_NAME}Dict)
+  if(NOT ${${PROJECT_NAME}_BUILDVERSION} STREQUAL "")
+    set(ROOTDICTDAQ ${ROOTDICTDAQ}_${${PROJECT_NAME}_MAJOR_VERSION}_${${PROJECT_NAME}_MINOR_VERSION}${${PROJECT_NAME}_BUILDVERSION}_${${PROJECT_NAME}_PATCH_VERSION})
+  endif(NOT ${${PROJECT_NAME}_BUILDVERSION} STREQUAL "")
+  message(STATUS "Dict Name: ${ROOTDICTDAQ}") 
   ROOT_GENERATE_DICTIONARY( ${ROOTDICTDAQ} include/data_types.h
                                         LINKDEF include/LinkDef.h)
 ENDIF(ENABLE_ROOT)
