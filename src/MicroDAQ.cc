@@ -71,11 +71,14 @@ namespace ChimeraTK {
 
   template<typename TRIGGERTYPE>
   void  MicroDAQ<TRIGGERTYPE>::addDeviceModule(const DeviceModule& source, const RegisterPath& namePrefix, const std::string& submodule){
-    auto mod = source.virtualiseFromCatalog();
-    if(submodule.empty())
-      impl->addSource(mod, namePrefix);
-    else
-      impl->addSource(mod.submodule(submodule), namePrefix);
+    if(impl){
+      auto mod = source.virtualiseFromCatalog();
+      if(submodule.empty()){
+        impl->addSource(mod, namePrefix);
+      } else {
+        impl->addSource(mod.submodule(submodule), namePrefix);
+      }
+    }
   }
 
 
