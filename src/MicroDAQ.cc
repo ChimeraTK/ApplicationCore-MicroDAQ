@@ -33,7 +33,7 @@ namespace ChimeraTK {
       const std::unordered_set<std::string>& tags)
   : ModuleGroup(owner, name, "", HierarchyModifier::hideThis) {
     // do nothing if the entire module is disabled
-    if(appConfig().template get<int>("Configuration/MicroDAQ/enable") == false) return;
+    if(appConfig().template get<Boolean>("Configuration/MicroDAQ/enable") == false) return;
 
     // obtain desired output format from configuration and convert to lower case
     auto type = appConfig().template get<std::string>("Configuration/MicroDAQ/outputFormat");
