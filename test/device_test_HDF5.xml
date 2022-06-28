@@ -1,7 +1,7 @@
 <configuration>
   <module name="Configuration">
     <module name="MicroDAQ">
-      <variable name="enable" type="int32" value="1"/>
+      <variable name="enable" type="boolean" value="true"/>
       <variable name="outputFormat" type="string" value="hdf5"/>
       <variable name="decimationFactor" type="uint32" value="10"/>
       <variable name="decimationThreshold" type="uint32" value="200000"/>
