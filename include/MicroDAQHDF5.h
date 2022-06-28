@@ -40,21 +40,20 @@ namespace ChimeraTK {
      * size bigger than decimationThreshold will be decimated by decimationFactor
      * before writing to the HDF5 file.
      */
-    HDF5DAQ(EntityOwner* owner, const std::string& name, const std::string& description,
-        uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000,
-        HierarchyModifier hierarchyModifier = HierarchyModifier::none,
-        const std::unordered_set<std::string>& tags = {}, const std::string &pathToTrigger="trigger")
+    HDF5DAQ(EntityOwner* owner, const std::string& name, const std::string& description, uint32_t decimationFactor = 10,
+        uint32_t decimationThreshold = 1000, HierarchyModifier hierarchyModifier = HierarchyModifier::none,
+        const std::unordered_set<std::string>& tags = {}, const std::string& pathToTrigger = "trigger")
     : BaseDAQ<TRIGGERTYPE>(owner, name, description, ".h5", decimationFactor, decimationThreshold, hierarchyModifier,
-                           tags, pathToTrigger) {}
+          tags, pathToTrigger) {}
 
     /** Default constructor, creates a non-working module. Can be used for late
      * initialisation. */
-    HDF5DAQ() : BaseDAQ<TRIGGERTYPE>()  {}
+    HDF5DAQ() : BaseDAQ<TRIGGERTYPE>() {}
 
     /**
      * Overload that calls virtualiseFromCatalog.
      */
-//    void addSource(const DeviceModule& source, const RegisterPath& namePrefix = "");
+    //    void addSource(const DeviceModule& source, const RegisterPath& namePrefix = "");
    protected:
     void mainLoop() override;
 
@@ -66,7 +65,5 @@ namespace ChimeraTK {
   DECLARE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(HDF5DAQ);
 
 } // namespace ChimeraTK
-
-
 
 #endif /* INCLUDE_MICRODAQHDF5_H_ */

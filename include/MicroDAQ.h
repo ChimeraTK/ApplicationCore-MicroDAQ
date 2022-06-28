@@ -40,7 +40,6 @@ namespace ChimeraTK {
   template<typename TRIGGERTYPE>
   class MicroDAQ : public ModuleGroup {
    public:
-
     /**
      *  Construct MicroDAQ system as it is configured in the ConfigReader config file.
      *
@@ -54,9 +53,8 @@ namespace ChimeraTK {
      *
      *  If MicroDAQ/enable == 0, all other variables can be omitted.
      */
-    MicroDAQ(EntityOwner* owner, const std::string& name, const std::string& description,
-        const std::string& inputTag, const std::string& pathToTrigger,
-        HierarchyModifier hierarchyModifier = HierarchyModifier::none,
+    MicroDAQ(EntityOwner* owner, const std::string& name, const std::string& description, const std::string& inputTag,
+        const std::string& pathToTrigger, HierarchyModifier hierarchyModifier = HierarchyModifier::none,
         const std::unordered_set<std::string>& tags = {});
     MicroDAQ() {}
 
@@ -68,29 +66,25 @@ namespace ChimeraTK {
      * \param namePrefix This prefix is used in the root file tree. It is prepended to the register names from the device.
      * \param submodule Use only a submodule of the device.
      */
-    void addDeviceModule(const DeviceModule& source, const RegisterPath& namePrefix = "", const std::string& submodule = "");
+    void addDeviceModule(
+        const DeviceModule& source, const RegisterPath& namePrefix = "", const std::string& submodule = "");
 
    protected:
-
     std::shared_ptr<BaseDAQ<TRIGGERTYPE>> impl;
-
   };
-
 
   /**
    *  Base class used by the actual MicroDAQ implementations (HDF5, ROOT)
    */
   template<typename TRIGGERTYPE>
-  class BaseDAQ: public ApplicationModule {
-  private:
-
+  class BaseDAQ : public ApplicationModule {
+   private:
     std::unordered_set<std::string> _tags; ///< Tags to be added to all variables of the DAQ module.
 
     /**
      * Delete file corresponding to currentBuffer from the ringbuffer.
      */
     void deleteRingBufferFile();
-
 
     /**
      * Check if ringbuffer file corresponding to currentBuffer exists.
@@ -105,9 +99,9 @@ namespace ChimeraTK {
     /**
      * Interal function that knows if the source is a ControlsystemModul
      */
-    virtual void addSource(const Module& source, const RegisterPath& namePrefix, const bool &isCSModule);
+    virtual void addSource(const Module& source, const RegisterPath& namePrefix, const bool& isCSModule);
 
-  protected:
+   protected:
     /** Parameters for the data decimation */
     uint32_t _decimationFactor, _decimationThreshold;
 
@@ -115,7 +109,7 @@ namespace ChimeraTK {
 
     std::string _daqDefaultPath; ///< Default DAQ path stored to check easily for new DAQ path
 
-    std::string _suffix;///< The DAQ type specific suffix e.g. .root
+    std::string _suffix; ///< The DAQ type specific suffix e.g. .root
 
     std::string _prefix; ///< Current prefix path+date
 
@@ -170,7 +164,6 @@ namespace ChimeraTK {
      */
     void updateDAQPath();
 
-
     /**
      * Check if maximum number of entries per file is reached.
      *
@@ -187,24 +180,19 @@ namespace ChimeraTK {
      */
     void disableDAQ();
 
-  public:
-    BaseDAQ(EntityOwner* owner, const std::string& name, const std::string& description, const std::string &suffix,
-            uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000,
-            HierarchyModifier hierarchyModifier = HierarchyModifier::none,
-            const std::unordered_set<std::string>& tags = {}, const std::string &pathToTrigger="trigger")
-        : ApplicationModule(owner, name, description, hierarchyModifier), _tags(tags), _decimationFactor(decimationFactor),
-          _decimationThreshold(decimationThreshold),
-          _daqDefaultPath((boost::filesystem::current_path()/"uDAQ").string()),
-          _suffix(suffix),
-          triggerGroup(this, pathToTrigger[0] != '/' ? "./"+pathToTrigger : pathToTrigger, tags)
-    {}
+   public:
+    BaseDAQ(EntityOwner* owner, const std::string& name, const std::string& description, const std::string& suffix,
+        uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000,
+        HierarchyModifier hierarchyModifier = HierarchyModifier::none, const std::unordered_set<std::string>& tags = {},
+        const std::string& pathToTrigger = "trigger")
+    : ApplicationModule(owner, name, description, hierarchyModifier), _tags(tags), _decimationFactor(decimationFactor),
+      _decimationThreshold(decimationThreshold), _daqDefaultPath((boost::filesystem::current_path() / "uDAQ").string()),
+      _suffix(suffix), triggerGroup(this, pathToTrigger[0] != '/' ? "./" + pathToTrigger : pathToTrigger, tags) {}
 
-    BaseDAQ()
-    : _decimationFactor(0), _decimationThreshold(0)
-    {}
+    BaseDAQ() : _decimationFactor(0), _decimationThreshold(0) {}
 
-    void findTagAndAppendToModule(VirtualModule& virtualParent, const std::string& tag,
-        bool eliminateAllHierarchies, bool eliminateFirstHierarchy, bool negate, VirtualModule& root) const override;
+    void findTagAndAppendToModule(VirtualModule& virtualParent, const std::string& tag, bool eliminateAllHierarchies,
+        bool eliminateFirstHierarchy, bool negate, VirtualModule& root) const override;
 
     /**
      * Check if accessor uses the DAQ trigger as external trigger.
@@ -212,15 +200,15 @@ namespace ChimeraTK {
      * In that case it has to be updated as well as the trigger before reading
      * data by the DAQ.
      */
-    template <typename UserType>
-    bool isAccessorUsingDAQTrigger(const ArrayPushInput<UserType> &accessor){
+    template<typename UserType>
+    bool isAccessorUsingDAQTrigger(const ArrayPushInput<UserType>& accessor) {
       // Find out if accessor has external trigger and if it is the DAQ trigger
-      auto network =  &((VariableNetworkNode)accessor).getOwner();
+      auto network = &((VariableNetworkNode)accessor).getOwner();
       auto triggerNode = &(triggerGroup.trigger);
       // check if network has external trigger
-      if(network->getTriggerType() == VariableNetwork::TriggerType::external){
+      if(network->getTriggerType() == VariableNetwork::TriggerType::external) {
         // check if external trigger is the DAQ trigger
-        if(network->getFeedingNode().getExternalTrigger() == (VariableNetworkNode)*triggerNode){
+        if(network->getFeedingNode().getExternalTrigger() == (VariableNetworkNode)*triggerNode) {
           return true;
         }
       }
@@ -238,38 +226,31 @@ namespace ChimeraTK {
       ScalarPushInput<TRIGGERTYPE> trigger;
     } triggerGroup;
 
-    ScalarPollInput<std::string> setPath { this, "directory", "",
-        "Directory where to store the DAQ data. If not set a subdirectory called uDAQ in the current directory is used.",
-        _tags };
+    ScalarPollInput<std::string> setPath{this, "directory",
+        "", "Directory where to store the DAQ data. If not set a subdirectory called uDAQ in the current directory is used.",
+        _tags};
 
-    ScalarPollInput<int> enable { this, "enable", "",
-        "DAQ is active when set to 0 and disabled when set to 0.",
-        _tags };
+    ScalarPollInput<int> enable{this, "enable", "", "DAQ is active when set to 0 and disabled when set to 0.", _tags};
 
-    ScalarPollInput<uint32_t> nMaxFiles { this, "nMaxFiles", "",
+    ScalarPollInput<uint32_t> nMaxFiles{this, "nMaxFiles", "",
         "Maximum number of files in the ring buffer "
         "(oldest file will be overwritten).",
-        _tags };
+        _tags};
 
-    ScalarPollInput<uint32_t> nTriggersPerFile { this, "nTriggersPerFile", "",
-        "Number of triggers stored in each file.",
-        _tags };
+    ScalarPollInput<uint32_t> nTriggersPerFile{
+        this, "nTriggersPerFile", "", "Number of triggers stored in each file.", _tags};
 
-    ScalarOutput<std::string> currentPath { this, "currentDirectory", "",
-        "Directory currently used for DAQ. To switch directories turn off DAQ and set new directory.",
-        _tags };
+    ScalarOutput<std::string> currentPath{this, "currentDirectory", "",
+        "Directory currently used for DAQ. To switch directories turn off DAQ and set new directory.", _tags};
 
-    ScalarOutput<uint32_t> currentBuffer { this, "currentBuffer", "",
-        "File number currently written to. If DAQ this shows the next buffer to be used by the DAQ.",
-        _tags };
+    ScalarOutput<uint32_t> currentBuffer{this, "currentBuffer", "",
+        "File number currently written to. If DAQ this shows the next buffer to be used by the DAQ.", _tags};
 
-    ScalarOutput<uint32_t> currentEntry { this, "currentEntry", "",
-        "Last entry number written. Is reset with every new file.",
-        _tags };
+    ScalarOutput<uint32_t> currentEntry{
+        this, "currentEntry", "", "Last entry number written. Is reset with every new file.", _tags};
 
-    ScalarOutput<uint32_t> errorStatus { this, "DAQError", "",
-        "True in case an error occurred. Reset by toggling enable.",
-        _tags };
+    ScalarOutput<uint32_t> errorStatus{
+        this, "DAQError", "", "True in case an error occurred. Reset by toggling enable.", _tags};
 
     virtual void addSource(const Module& source, const RegisterPath& namePrefix = "");
 

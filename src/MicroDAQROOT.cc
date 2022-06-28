@@ -20,15 +20,12 @@ namespace ChimeraTK {
 
     template<typename TRIGGERTYPE>
     struct ROOTstorage {
-      ROOTstorage(RootDAQ<TRIGGERTYPE>* owner) : outFile(nullptr), tree(nullptr), _owner(owner)
-      {  }
-      ~ROOTstorage(){
-        close();
-      }
+      ROOTstorage(RootDAQ<TRIGGERTYPE>* owner) : outFile(nullptr), tree(nullptr), _owner(owner) {}
+      ~ROOTstorage() { close(); }
 
-      void close(){
-        if(tree && outFile){
-          if(!tree->Write()){
+      void close() {
+        if(tree && outFile) {
+          if(!tree->Write()) {
             std::cerr << "No data written to file, when writing the TTree." << std::endl;
           }
           outFile->Close();
@@ -70,7 +67,6 @@ namespace ChimeraTK {
       std::vector<TransferElementID> _accessorsWithTrigger;
     };
 
-
     template<typename TRIGGERTYPE>
     struct ROOTDataSpaceCreator {
       ROOTDataSpaceCreator(ROOTstorage<TRIGGERTYPE>& storage) : _storage(storage) {}
@@ -90,7 +86,7 @@ namespace ChimeraTK {
         auto name = nameList.begin();
         for(auto accessor = accessorList.begin(); accessor != accessorList.end(); ++accessor, ++name) {
           // check if accessor uses DAQ trigger as external trigger
-          if(_storage._owner->isAccessorUsingDAQTrigger(*accessor)){
+          if(_storage._owner->isAccessorUsingDAQTrigger(*accessor)) {
             _storage._accessorsWithTrigger.push_back(accessor->getId());
           }
 
@@ -107,19 +103,19 @@ namespace ChimeraTK {
           std::string nameWithDot = *name;
           replace(nameWithDot.begin(), nameWithDot.end(), '/', '.');
           // remove leading '.'
-          if(nameWithDot.at(0) != '.')
-            throw ChimeraTK::logic_error("Unexpected register name.");
-          nameWithDot = nameWithDot.substr(1,nameWithDot.length());
+          if(nameWithDot.at(0) != '.') throw ChimeraTK::logic_error("Unexpected register name.");
+          nameWithDot = nameWithDot.substr(1, nameWithDot.length());
           branchList.push_back(nameWithDot);
           // Add map entry -> based on the length create a scalar or an array
-          if(accessor->getNElements() > 1){
+          if(accessor->getNElements() > 1) {
             // create map entry (empty array)
             auto array = treeData.trace[nameWithDot];
             // set array length
-            array.Set(accessor->getNElements()/factor);
+            array.Set(accessor->getNElements() / factor);
             // assign array with correct length to the map entry
             treeData.trace[nameWithDot] = array;
-          } else {
+          }
+          else {
             treeData.parameter[nameWithDot];
           }
           // put all group names in list (each hierarchy level separately)
@@ -136,26 +132,25 @@ namespace ChimeraTK {
 
     template<typename TRIGGERTYPE>
     struct ROOTTreeCreator {
-      ROOTTreeCreator(ROOTstorage<TRIGGERTYPE>& storage, const std::string &name) : _storage(storage), _name(name) {}
+      ROOTTreeCreator(ROOTstorage<TRIGGERTYPE>& storage, const std::string& name) : _storage(storage), _name(name) {}
 
       template<typename PAIR>
-      void operator()(PAIR& ) const {
+      void operator()(PAIR&) const {
         typedef typename PAIR::first_type UserType;
 
-        if(!_storage.tree)
-          _storage.tree = new TTree(_name.c_str(),"Data produced by ChimeraTK RootDAQ module");
+        if(!_storage.tree) _storage.tree = new TTree(_name.c_str(), "Data produced by ChimeraTK RootDAQ module");
         // get the lists for the UserType
         auto& treeData = boost::fusion::at_key<UserType>(_storage.treeDataMap.table);
 
-        for(auto &accessor : treeData.parameter) {
+        for(auto& accessor : treeData.parameter) {
           // determine decimation factor
-          if(_storage.tree->Branch(accessor.first.c_str(),&accessor.second) == nullptr){
+          if(_storage.tree->Branch(accessor.first.c_str(), &accessor.second) == nullptr) {
             throw ChimeraTK::logic_error((std::string("Failed to add branch for variable ") + accessor.first).c_str());
           }
         }
-        for(auto &accessor : treeData.trace) {
+        for(auto& accessor : treeData.trace) {
           // determine decimation factor
-          if(_storage.tree->Branch(accessor.first.c_str(),&accessor.second) == nullptr){
+          if(_storage.tree->Branch(accessor.first.c_str(), &accessor.second) == nullptr) {
             throw ChimeraTK::logic_error((std::string("Failed to add branch for variable ") + accessor.first).c_str());
           }
         }
@@ -170,7 +165,7 @@ namespace ChimeraTK {
       ROOTDataWriter(ROOTstorage<TRIGGERTYPE>& storage) : _storage(storage) {}
 
       template<typename PAIR>
-      void operator()(PAIR& ) const {
+      void operator()(PAIR&) const {
         typedef typename PAIR::first_type UserType;
 
         // get the lists for the UserType
@@ -182,12 +177,13 @@ namespace ChimeraTK {
         auto branchName = branchList.begin();
         auto decimationFactor = decimationFactorList.begin();
 
-        for(auto accessor = accessorList.begin(); accessor != accessorList.end(); ++accessor, ++branchName,++decimationFactor){
-          if(accessor->getNElements() > 1){
-            size_t n = accessor->getNElements()/(*decimationFactor);
-            for(size_t i = 0; i < n; i++)
-              treeDataMap.trace[*branchName][i] = (*accessor)[i*(*decimationFactor)];
-          } else {
+        for(auto accessor = accessorList.begin(); accessor != accessorList.end();
+            ++accessor, ++branchName, ++decimationFactor) {
+          if(accessor->getNElements() > 1) {
+            size_t n = accessor->getNElements() / (*decimationFactor);
+            for(size_t i = 0; i < n; i++) treeDataMap.trace[*branchName][i] = (*accessor)[i * (*decimationFactor)];
+          }
+          else {
             treeDataMap.parameter[*branchName] = (*accessor)[0];
           }
         }
@@ -197,7 +193,7 @@ namespace ChimeraTK {
     };
 
     template<typename TRIGGERTYPE>
-    void ROOTstorage<TRIGGERTYPE>::processTrigger(){
+    void ROOTstorage<TRIGGERTYPE>::processTrigger() {
       // update daqPath if DAQ is disabled
       _owner->updateDAQPath();
 
@@ -211,8 +207,8 @@ namespace ChimeraTK {
 
         std::string filename = _owner->nextBuffer();
         // open file
-        outFile = TFile::Open((_owner->_daqPath/filename).c_str(), "RECREATE");
-        if(outFile){
+        outFile = TFile::Open((_owner->_daqPath / filename).c_str(), "RECREATE");
+        if(outFile) {
           outFile->SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm::kZSTD);
           outFile->SetCompressionLevel(ROOT::RCompressionSetting::ELevel::kDefaultZSTD);
         }
@@ -223,8 +219,8 @@ namespace ChimeraTK {
         _owner->disableDAQ();
       }
 
-      if(outFile){
-        if(!tree){
+      if(outFile) {
+        if(!tree) {
           boost::fusion::for_each(treeDataMap.table, ROOTTreeCreator<TRIGGERTYPE>(*this, _owner->_treeName));
           tree->Branch("timeStamp", &timeStamp);
         }
@@ -239,26 +235,26 @@ namespace ChimeraTK {
       }
 
       // update error status for active DAQ
-      if(_owner->enable == 1){
+      if(_owner->enable == 1) {
         // only write error message once
-        if(!outFile && _owner->errorStatus == 0){
-          std::cerr << "Something went wrong. File could not be opened. Solve the problem and toggle enable DAQ to try again." << std::endl;
+        if(!outFile && _owner->errorStatus == 0) {
+          std::cerr
+              << "Something went wrong. File could not be opened. Solve the problem and toggle enable DAQ to try again."
+              << std::endl;
           _owner->errorStatus = 1;
           _owner->errorStatus.write();
           delete outFile;
-        } else if (outFile && _owner->errorStatus != 0) {
+        }
+        else if(outFile && _owner->errorStatus != 0) {
           _owner->errorStatus = 0;
           _owner->errorStatus.write();
         }
       }
       // close file if all triggers are filled
-      if (outFile){
+      if(outFile) {
         auto nEntries = tree->GetEntriesFast();
-        if(_owner->flushAfterNEntries > 0 && nEntries % _owner->flushAfterNEntries == 1)
-          tree->AutoSave("SaveSelf");
-        if(_owner->maxEntriesReached())
-          close();
-
+        if(_owner->flushAfterNEntries > 0 && nEntries % _owner->flushAfterNEntries == 1) tree->AutoSave("SaveSelf");
+        if(_owner->maxEntriesReached()) close();
       }
     }
 
@@ -272,7 +268,8 @@ namespace ChimeraTK {
     detail::ROOTstorage<TRIGGERTYPE> storage(this);
 
     // create the data spaces and look for accessors using the DAQ trigger as external node
-    boost::fusion::for_each(BaseDAQ<TRIGGERTYPE>::_accessorListMap.table, detail::ROOTDataSpaceCreator<TRIGGERTYPE>(storage));
+    boost::fusion::for_each(
+        BaseDAQ<TRIGGERTYPE>::_accessorListMap.table, detail::ROOTDataSpaceCreator<TRIGGERTYPE>(storage));
 
     // add trigger
     storage._accessorsWithTrigger.push_back(BaseDAQ<TRIGGERTYPE>::triggerGroup.trigger.getId());

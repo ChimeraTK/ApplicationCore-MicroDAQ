@@ -12,7 +12,6 @@
 #include <ChimeraTK/ApplicationCore/ArrayAccessor.h>
 #include <ChimeraTK/ApplicationCore/VariableGroup.h>
 
-
 #include "MicroDAQ.h"
 
 namespace ChimeraTK {
@@ -36,45 +35,45 @@ namespace ChimeraTK {
    */
   template<typename TRIGGERTYPE = int32_t>
   class RootDAQ : public BaseDAQ<TRIGGERTYPE> {
-    public:
-     /**
+   public:
+    /**
       *  Constructor. decimationFactor and decimationThreshold are configuration
       * constants which determine how the data reduction is working. Arrays with a
       * size bigger than decimationThreshold will be decimated by decimationFactor
       * before writing to the ROOT file.
       */
-      RootDAQ(EntityOwner* owner, const std::string& name, const std::string& description,
-             uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000, HierarchyModifier hierarchyModifier = HierarchyModifier::none,
-             const std::unordered_set<std::string>& tags = {}, const std::string &pathToTrigger="trigger", const std::string &treeName="data")
-             : BaseDAQ<TRIGGERTYPE>(owner, name, description, ".root", decimationFactor, decimationThreshold, hierarchyModifier, tags, pathToTrigger), _treeName(treeName) {
-        flushAfterNEntries.addTags(tags);
-      }
+    RootDAQ(EntityOwner* owner, const std::string& name, const std::string& description, uint32_t decimationFactor = 10,
+        uint32_t decimationThreshold = 1000, HierarchyModifier hierarchyModifier = HierarchyModifier::none,
+        const std::unordered_set<std::string>& tags = {}, const std::string& pathToTrigger = "trigger",
+        const std::string& treeName = "data")
+    : BaseDAQ<TRIGGERTYPE>(owner, name, description, ".root", decimationFactor, decimationThreshold, hierarchyModifier,
+          tags, pathToTrigger),
+      _treeName(treeName) {
+      flushAfterNEntries.addTags(tags);
+    }
 
-     /** Default constructor, creates a non-working module. Can be used for late
+    /** Default constructor, creates a non-working module. Can be used for late
       * initialisation. */
-     RootDAQ() : BaseDAQ<TRIGGERTYPE>() {}
+    RootDAQ() : BaseDAQ<TRIGGERTYPE>() {}
 
-     ScalarPollInput<uint32_t> flushAfterNEntries { this, "flushAfterNEntries", "",
-         "Number of entries to be accumulated before writing to file. This is ignored if value is 0."};
+    ScalarPollInput<uint32_t> flushAfterNEntries{this, "flushAfterNEntries", "",
+        "Number of entries to be accumulated before writing to file. This is ignored if value is 0."};
 
-    protected:
-     void mainLoop() override;
+   protected:
+    void mainLoop() override;
 
-     /** Branch names - is overallVariableList with '/' replaced by '.' */
-     template<typename UserType>
-     using BranchList = std::list<std::string>;
-     TemplateUserTypeMapNoVoid<BranchList>  _branchNameList;
-     std::string _treeName;
+    /** Branch names - is overallVariableList with '/' replaced by '.' */
+    template<typename UserType>
+    using BranchList = std::list<std::string>;
+    TemplateUserTypeMapNoVoid<BranchList> _branchNameList;
+    std::string _treeName;
 
-
-     friend struct detail::ROOTstorage<TRIGGERTYPE>;
-     friend struct detail::ROOTDataSpaceCreator<TRIGGERTYPE>;
-     friend struct detail::ROOTTreeCreator<TRIGGERTYPE>;
-     friend struct detail::ROOTDataWriter<TRIGGERTYPE>;
+    friend struct detail::ROOTstorage<TRIGGERTYPE>;
+    friend struct detail::ROOTDataSpaceCreator<TRIGGERTYPE>;
+    friend struct detail::ROOTTreeCreator<TRIGGERTYPE>;
+    friend struct detail::ROOTDataWriter<TRIGGERTYPE>;
   };
   DECLARE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(RootDAQ);
 } // namespace ChimeraTK
-
-
 
 #endif /* INCLUDE_MICRODAQROOT_H_ */

@@ -7,7 +7,7 @@
 
 #ifdef __CINT__
 
-#pragma link C++ namespace ChimeraTK;
-#pragma link C++ namespace ChimeraTK::detail;
-#pragma link C++ struct ChimeraTK::detail::TArrayStr;
+#  pragma link C++ namespace ChimeraTK;
+#  pragma link C++ namespace ChimeraTK::detail;
+#  pragma link C++ struct ChimeraTK::detail::TArrayStr;
 #endif
