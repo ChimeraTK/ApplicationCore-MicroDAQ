@@ -19,50 +19,49 @@
 #include <ChimeraTK/ApplicationCore/DeviceModule.h>
 
 #ifdef ENABLE_HDF5
-#include "MicroDAQHDF5.h"
+#  include "MicroDAQHDF5.h"
 #endif
 #ifdef ENABLE_ROOT
-#include "MicroDAQROOT.h"
+#  include "MicroDAQROOT.h"
 #endif
 
 namespace ChimeraTK {
 
   template<typename TRIGGERTYPE>
   MicroDAQ<TRIGGERTYPE>::MicroDAQ(EntityOwner* owner, const std::string& name, const std::string& description,
-      const std::string& inputTag,  const std::string& pathToTrigger, HierarchyModifier hierarchyModifier,
+      const std::string& inputTag, const std::string& pathToTrigger, HierarchyModifier hierarchyModifier,
       const std::unordered_set<std::string>& tags)
-  : ModuleGroup(owner, name, "", HierarchyModifier::hideThis)
-  {
+  : ModuleGroup(owner, name, "", HierarchyModifier::hideThis) {
     // do nothing if the entire module is disabled
-    if(appConfig().template get<int>("MicroDAQ/enable") == false) return;
+    if(appConfig().template get<int>("Configuration/MicroDAQ/enable") == false) return;
 
     // obtain desired output format from configuration and convert to lower case
-    auto type = appConfig().template get<std::string>("MicroDAQ/outputFormat");
-    std::transform(type.begin(), type.end(), type.begin(), [](unsigned char c){ return std::tolower(c); });
+    auto type = appConfig().template get<std::string>("Configuration/MicroDAQ/outputFormat");
+    std::transform(type.begin(), type.end(), type.begin(), [](unsigned char c) { return std::tolower(c); });
 
     // obtain decimation factor from configuration
-    uint32_t decimationFactor = appConfig().template get<uint32_t>("MicroDAQ/decimationFactor");
-    uint32_t decimationThreshold = appConfig().template get<uint32_t>("MicroDAQ/decimationThreshold");
+    uint32_t decimationFactor = appConfig().template get<uint32_t>("Configuration/MicroDAQ/decimationFactor");
+    uint32_t decimationThreshold = appConfig().template get<uint32_t>("Configuration/MicroDAQ/decimationThreshold");
 
     // instantiate DAQ implementation for the desired output format
     if(type == "hdf5") {
 #ifdef ENABLE_HDF5
-        impl = std::make_shared<HDF5DAQ<TRIGGERTYPE>>(this, name, description, decimationFactor, decimationThreshold,
-                                                          hierarchyModifier, tags, pathToTrigger);
+      impl = std::make_shared<HDF5DAQ<TRIGGERTYPE>>(
+          this, name, description, decimationFactor, decimationThreshold, hierarchyModifier, tags, pathToTrigger);
 #else
       throw ChimeraTK::logic_error("MicroDAQ: Output format HDF5 selected but not compiled in.");
 #endif
     }
     else if(type == "root") {
 #ifdef ENABLE_ROOT
-      impl = std::make_shared<RootDAQ<TRIGGERTYPE>>(this, name, description, decimationFactor, decimationThreshold,
-                                                    hierarchyModifier, tags, pathToTrigger);
+      impl = std::make_shared<RootDAQ<TRIGGERTYPE>>(
+          this, name, description, decimationFactor, decimationThreshold, hierarchyModifier, tags, pathToTrigger);
 #else
       throw ChimeraTK::logic_error("MicroDAQ: Output format ROOT selected but not compiled in.");
 #endif
     }
     else {
-      throw ChimeraTK::logic_error("MicroDAQ: Unknown output format specified in config file: '"+type+"'.");
+      throw ChimeraTK::logic_error("MicroDAQ: Unknown output format specified in config file: '" + type + "'.");
     }
 
     // connect input data with the DAQ implementation
@@ -70,17 +69,18 @@ namespace ChimeraTK {
   }
 
   template<typename TRIGGERTYPE>
-  void  MicroDAQ<TRIGGERTYPE>::addDeviceModule(const DeviceModule& source, const RegisterPath& namePrefix, const std::string& submodule){
-    if(impl){
+  void MicroDAQ<TRIGGERTYPE>::addDeviceModule(
+      const DeviceModule& source, const RegisterPath& namePrefix, const std::string& submodule) {
+    if(impl) {
       auto mod = source.virtualiseFromCatalog();
-      if(submodule.empty()){
+      if(submodule.empty()) {
         impl->addSource(mod, namePrefix);
-      } else {
+      }
+      else {
         impl->addSource(mod.submodule(submodule), namePrefix);
       }
     }
   }
-
 
   namespace detail {
 
@@ -97,13 +97,15 @@ namespace ChimeraTK {
         if(typeid(typename PAIR::first_type) != _feeder.getValueType()) return;
 
         // register connection
-        try{
+        try {
           if(_feeder.getMode() == UpdateMode::poll && _feeder.getDirection().dir == VariableDirection::feeding)
             _feeder[_owner->triggerGroup.trigger] >> _owner->template getAccessor<typename PAIR::first_type>(_name);
           else
             _feeder >> _owner->template getAccessor<typename PAIR::first_type>(_name);
-        } catch (ChimeraTK::logic_error& e){
-          std::cout << "Failed to add accessor with name: " << _name << ", because it is already registered for DAQ." << std::endl;
+        }
+        catch(ChimeraTK::logic_error& e) {
+          std::cout << "Failed to add accessor with name: " << _name << ", because it is already registered for DAQ."
+                    << std::endl;
           return;
         }
       }
@@ -121,8 +123,8 @@ namespace ChimeraTK {
     // check if variable name already registered
     for(auto& name : _overallVariableList) {
       if(name == variableName) {
-        throw ChimeraTK::logic_error(
-            "Cannot add '" + variableName + "' to MicroDAQ since a variable with that "
+        throw ChimeraTK::logic_error("Cannot add '" + variableName +
+            "' to MicroDAQ since a variable with that "
             "name is already registered.");
       }
     }
@@ -133,9 +135,10 @@ namespace ChimeraTK {
     auto& nameList = boost::fusion::at_key<UserType>(_nameListMap.table);
     auto dirName = variableName.substr(0, variableName.find_last_of("/"));
     auto baseName = variableName.substr(variableName.find_last_of("/") + 1);
-    if(BaseDAQ<TRIGGERTYPE>::_groupMap.count(dirName) < 1 ){
+    if(BaseDAQ<TRIGGERTYPE>::_groupMap.count(dirName) < 1) {
       tmpAccessorList.emplace_back(this, baseName, "", 0, "");
-    } else {
+    }
+    else {
       tmpAccessorList.emplace_back(&BaseDAQ<TRIGGERTYPE>::_groupMap[dirName], baseName, "", 0, "");
     }
     nameList.push_back(variableName);
@@ -173,7 +176,6 @@ namespace ChimeraTK {
       }
     }
 
-
     // add all accessors on this hierarchy level
     for(auto& acc : dynamicModel.getAccessorList()) {
       // seems like getName returns the full path for ControlSystemModule whereas it returns only the accessor name for ApplicationModule
@@ -182,8 +184,7 @@ namespace ChimeraTK {
       // for modules with deleted hierarchy names might still include '/',
       // e.g. Controller includes 'FeedForward/Table/I' and remove FeedForward/Table would lead to multiple
       // I variables with namePrefix Controller -> only do the removal for CS modules
-      if(isCSModule && name.find("/") != std::string::npos)
-        name = name.substr(name.find_last_of("/")+1);
+      if(isCSModule && name.find("/") != std::string::npos) name = name.substr(name.find_last_of("/") + 1);
       boost::fusion::for_each(
           _accessorListMap.table, detail::BaseDAQAccessorAttacher<TRIGGERTYPE>(acc, this, namePrefix / name));
     }
@@ -198,40 +199,43 @@ namespace ChimeraTK {
   void BaseDAQ<TRIGGERTYPE>::addSource(const Module& source, const RegisterPath& namePrefix) {
     //\ToDo: Rework the variable name creation without CS specific workaround
     bool isCSModule = false;
-    if(dynamic_cast<const ControlSystemModule*>(&source) != nullptr)
-      isCSModule = true;
+    if(dynamic_cast<const ControlSystemModule*>(&source) != nullptr) isCSModule = true;
     addSource(source, namePrefix, isCSModule);
   }
 
   template<typename TRIGGERTYPE>
-  void BaseDAQ<TRIGGERTYPE>::setDAQPath(){
-    try{
-      if(((std::string)setPath).empty()){
-        _daqPath = boost::filesystem::current_path()/"uDAQ";
-      } else {
+  void BaseDAQ<TRIGGERTYPE>::setDAQPath() {
+    try {
+      if(((std::string)setPath).empty()) {
+        _daqPath = boost::filesystem::current_path() / "uDAQ";
+      }
+      else {
         _daqPath = boost::filesystem::path((std::string)setPath);
       }
       std::cout << "Set new DAQ path: " << _daqPath.string().c_str() << std::endl;
       currentPath = _daqPath.string();
       currentPath.write();
-    } catch (...){
+    }
+    catch(...) {
       std::cerr << "Failed setting new DAQ path." << std::endl;
     }
   }
   template<typename TRIGGERTYPE>
-  bool BaseDAQ<TRIGGERTYPE>::checkFile(){
-    try{
-      if (boost::filesystem::exists(_daqPath)){    // does p actually exist?
-        if (boost::filesystem::is_directory(_daqPath)){      // is p a directory?
-          for(auto i = boost::filesystem::directory_iterator(_daqPath); i != boost::filesystem::directory_iterator(); i++){
+  bool BaseDAQ<TRIGGERTYPE>::checkFile() {
+    try {
+      if(boost::filesystem::exists(_daqPath)) {         // does p actually exist?
+        if(boost::filesystem::is_directory(_daqPath)) { // is p a directory?
+          for(auto i = boost::filesystem::directory_iterator(_daqPath); i != boost::filesystem::directory_iterator();
+              i++) {
             std::string match = (boost::format("buffer%04d%s") % currentBuffer % _suffix).str();
-            if(boost::filesystem::canonical(i->path()).string().find(match) != std::string::npos){
+            if(boost::filesystem::canonical(i->path()).string().find(match) != std::string::npos) {
               return boost::filesystem::file_size(i->path()) > 1000;
             }
           }
         }
       }
-    } catch (const boost::filesystem::filesystem_error& ex) {
+    }
+    catch(const boost::filesystem::filesystem_error& ex) {
       std::cout << "Checking existing buffer file failed:" << std::endl;
       std::cout << ex.what() << std::endl;
     }
@@ -239,76 +243,78 @@ namespace ChimeraTK {
   }
 
   template<typename TRIGGERTYPE>
-  void BaseDAQ<TRIGGERTYPE>::deleteRingBufferFile(){
-    try{
-      if (boost::filesystem::exists(_daqPath)){
-        if (boost::filesystem::is_directory(_daqPath)){
-          for(auto i = boost::filesystem::directory_iterator(_daqPath); i != boost::filesystem::directory_iterator(); i++){
+  void BaseDAQ<TRIGGERTYPE>::deleteRingBufferFile() {
+    try {
+      if(boost::filesystem::exists(_daqPath)) {
+        if(boost::filesystem::is_directory(_daqPath)) {
+          for(auto i = boost::filesystem::directory_iterator(_daqPath); i != boost::filesystem::directory_iterator();
+              i++) {
             std::string match = (boost::format("buffer%04d%s") % currentBuffer % _suffix).str();
-            if(boost::filesystem::canonical(i->path()).string().find(match) != std::string::npos){
+            if(boost::filesystem::canonical(i->path()).string().find(match) != std::string::npos) {
               boost::filesystem::remove(i->path());
             }
           }
         }
       }
-    } catch (const boost::filesystem::filesystem_error& ex) {
+    }
+    catch(const boost::filesystem::filesystem_error& ex) {
       std::cerr << "Ringbuffer file delete failed:" << std::endl;
       std::cout << ex.what() << std::endl;
     }
   }
 
   template<typename TRIGGERTYPE>
-  void BaseDAQ<TRIGGERTYPE>::checkBufferOnFirstTrigger(){
-  setDAQPath();
-  try{
-    // only create path if it is the default one
-    if(((std::string)currentPath).compare(_daqDefaultPath) ==0)
-      boost::filesystem::create_directory(_daqPath);
-  } catch (boost::filesystem::filesystem_error &e){
-    std::cerr << "Failed to create DAQ directory: " << ((std::string)currentPath).c_str() << std::endl;
-    std::cerr << e.what() << std::endl;
-    return;
-  }
-  std::fstream bufferNumber;
-  // determine current buffer number
-  bufferNumber.open((_daqPath/"currentBuffer").c_str(), std::ofstream::in);
-  bufferNumber.seekg(0);
-  if(!bufferNumber.eof()) {
-    bufferNumber >> currentBuffer;
-    std::string filename = _prefix + (boost::format("_buffer%04d%s") % currentBuffer % _suffix).str();
-    if(checkFile()){
-      currentBuffer++;
-      currentBuffer.write();
+  void BaseDAQ<TRIGGERTYPE>::checkBufferOnFirstTrigger() {
+    setDAQPath();
+    try {
+      // only create path if it is the default one
+      if(((std::string)currentPath).compare(_daqDefaultPath) == 0) boost::filesystem::create_directory(_daqPath);
     }
-    if(currentBuffer >= nMaxFiles) {
+    catch(boost::filesystem::filesystem_error& e) {
+      std::cerr << "Failed to create DAQ directory: " << ((std::string)currentPath).c_str() << std::endl;
+      std::cerr << e.what() << std::endl;
+      return;
+    }
+    std::fstream bufferNumber;
+    // determine current buffer number
+    bufferNumber.open((_daqPath / "currentBuffer").c_str(), std::ofstream::in);
+    bufferNumber.seekg(0);
+    if(!bufferNumber.eof()) {
+      bufferNumber >> currentBuffer;
+      std::string filename = _prefix + (boost::format("_buffer%04d%s") % currentBuffer % _suffix).str();
+      if(checkFile()) {
+        currentBuffer++;
+        currentBuffer.write();
+      }
+      if(currentBuffer >= nMaxFiles) {
+        currentBuffer = 0;
+        currentBuffer.write();
+      }
+    }
+    else {
       currentBuffer = 0;
       currentBuffer.write();
     }
+    bufferNumber.close();
   }
-  else {
-    currentBuffer = 0;
-    currentBuffer.write();
-  }
-  bufferNumber.close();
-}
 
   template<typename TRIGGERTYPE>
-  std::string BaseDAQ<TRIGGERTYPE>::nextBuffer(){
-    std::vector< std::string > result;
+  std::string BaseDAQ<TRIGGERTYPE>::nextBuffer() {
+    std::vector<std::string> result;
     // read local time e.g. 20200512T134659.777223
     std::string timeStampStr(boost::posix_time::to_iso_string(boost::posix_time::microsec_clock::local_time()));
     // remove sub second part -> 20200512T134659
     boost::algorithm::split(result, timeStampStr, boost::is_any_of("."));
     _prefix = result.at(0);
 
-    if(currentBuffer >= nMaxFiles){
+    if(currentBuffer >= nMaxFiles) {
       currentBuffer = 0;
       currentBuffer.write();
     }
     std::fstream bufferNumber;
     std::string filename = _prefix + (boost::format("_buffer%04d%s") % currentBuffer % _suffix).str();
     // store current buffer number to disk
-    bufferNumber.open((_daqPath/"currentBuffer").c_str(), std::ofstream::out);
+    bufferNumber.open((_daqPath / "currentBuffer").c_str(), std::ofstream::out);
     bufferNumber << currentBuffer << std::endl;
     bufferNumber.close();
 
@@ -318,20 +324,20 @@ namespace ChimeraTK {
   }
 
   template<typename TRIGGERTYPE>
-  void BaseDAQ<TRIGGERTYPE>::updateDAQPath(){
-    if(enable == 0){
-      if (((std::string)setPath).empty()){
-        if (((std::string)currentPath).compare(_daqDefaultPath) != 0)
-          setDAQPath();
-      } else if (((std::string)setPath).compare((std::string)currentPath) != 0 ){
+  void BaseDAQ<TRIGGERTYPE>::updateDAQPath() {
+    if(enable == 0) {
+      if(((std::string)setPath).empty()) {
+        if(((std::string)currentPath).compare(_daqDefaultPath) != 0) setDAQPath();
+      }
+      else if(((std::string)setPath).compare((std::string)currentPath) != 0) {
         setDAQPath();
       }
     }
   }
 
   template<typename TRIGGERTYPE>
-  bool BaseDAQ<TRIGGERTYPE>::maxEntriesReached(){
-    if(currentEntry == nTriggersPerFile){
+  bool BaseDAQ<TRIGGERTYPE>::maxEntriesReached() {
+    if(currentEntry == nTriggersPerFile) {
       // increase current buffer number, nextBuffer will check buffer size
       currentBuffer++;
       currentBuffer.write();
@@ -343,7 +349,7 @@ namespace ChimeraTK {
   }
 
   template<typename TRIGGERTYPE>
-  void BaseDAQ<TRIGGERTYPE>::disableDAQ(){
+  void BaseDAQ<TRIGGERTYPE>::disableDAQ() {
     currentEntry = 0;
     currentEntry.write();
     errorStatus = 0;
@@ -354,8 +360,8 @@ namespace ChimeraTK {
   }
 
   template<typename TRIGGERTYPE>
-  void BaseDAQ<TRIGGERTYPE>::findTagAndAppendToModule(VirtualModule& virtualParent, const std::string& tag,
-      bool, bool, bool negate, VirtualModule& root) const {
+  void BaseDAQ<TRIGGERTYPE>::findTagAndAppendToModule(
+      VirtualModule& virtualParent, const std::string& tag, bool, bool, bool negate, VirtualModule& root) const {
     // Change behaviour to exclude the auto-generated inputs which are connected to the data sources. Otherwise those
     // variables might get published twice to the control system, if findTag(".*") is used to connect the entire
     // application to the control system.

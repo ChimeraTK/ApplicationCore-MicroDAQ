@@ -74,7 +74,7 @@ namespace ChimeraTK {
         auto name = nameList.begin();
         for(auto accessor = accessorList.begin(); accessor != accessorList.end(); ++accessor, ++name) {
           // check if accessor uses DAQ trigger as external trigger
-          if(_storage._owner->isAccessorUsingDAQTrigger(*accessor)){
+          if(_storage._owner->isAccessorUsingDAQTrigger(*accessor)) {
             _storage._accessorsWithTrigger.push_back(accessor->getId());
           }
           // determine decimation factor
@@ -113,7 +113,8 @@ namespace ChimeraTK {
     detail::H5storage<TRIGGERTYPE> storage(this);
 
     // create the data spaces
-    boost::fusion::for_each(BaseDAQ<TRIGGERTYPE>::_accessorListMap.table, detail::H5DataSpaceCreator<TRIGGERTYPE>(storage));
+    boost::fusion::for_each(
+        BaseDAQ<TRIGGERTYPE>::_accessorListMap.table, detail::H5DataSpaceCreator<TRIGGERTYPE>(storage));
 
     // add trigger
     storage._accessorsWithTrigger.push_back(BaseDAQ<TRIGGERTYPE>::triggerGroup.trigger.getId());
@@ -155,7 +156,7 @@ namespace ChimeraTK {
 
         // open file
         try {
-          outFile = H5::H5File((_owner->_daqPath/filename).c_str(), H5F_ACC_TRUNC);
+          outFile = H5::H5File((_owner->_daqPath / filename).c_str(), H5F_ACC_TRUNC);
         }
         catch(H5::FileIException&) {
           return;
@@ -177,19 +178,22 @@ namespace ChimeraTK {
       }
 
       // update error status for active DAQ
-      if(_owner->enable == 1){
+      if(_owner->enable == 1) {
         // only write error message once
-        if(!isOpened && _owner->errorStatus == 0){
-          std::cerr << "Something went wrong. File could not be opened. Solve the problem and toggle enable DAQ to try again." << std::endl;
+        if(!isOpened && _owner->errorStatus == 0) {
+          std::cerr
+              << "Something went wrong. File could not be opened. Solve the problem and toggle enable DAQ to try again."
+              << std::endl;
           _owner->errorStatus = 1;
           _owner->errorStatus.write();
-        } else if (isOpened && _owner->errorStatus != 0) {
+        }
+        else if(isOpened && _owner->errorStatus != 0) {
           _owner->errorStatus = 0;
           _owner->errorStatus.write();
         }
       }
 
-      if(isOpened){
+      if(isOpened) {
         if(_owner->maxEntriesReached()) {
           // just close the file here, will re-open on next trigger
           outFile.close();
@@ -297,7 +301,3 @@ namespace ChimeraTK {
   INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(HDF5DAQ);
 
 } // namespace ChimeraTK
-
-
-
-

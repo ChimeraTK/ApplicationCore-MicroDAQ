@@ -14,17 +14,17 @@
 typedef boost::mpl::list<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float, double, bool, std::string>
     test_types;
 
-template <typename UserType>
-struct Dummy: public ChimeraTK::ApplicationModule{
+template<typename UserType>
+struct Dummy : public ChimeraTK::ApplicationModule {
   using ChimeraTK::ApplicationModule::ApplicationModule;
-  ChimeraTK::ScalarOutput<UserType> out {this, "out", "", "Dummy output", {"DAQ"}};
-  ChimeraTK::ScalarOutput<int> outTrigger {this, "outTrigger", "", "Dummy output"};
-  ChimeraTK::ScalarPushInput<int> trigger {this, "trigger", "" ,"Trigger", {}};
-  void mainLoop() override{
+  ChimeraTK::ScalarOutput<UserType> out{this, "out", "", "Dummy output", {"DAQ"}};
+  ChimeraTK::ScalarOutput<int> outTrigger{this, "outTrigger", "", "Dummy output"};
+  ChimeraTK::ScalarPushInput<int> trigger{this, "trigger", "", "Trigger", {}};
+  void mainLoop() override {
     out = 0;
     // This also writes outTrigger!
     writeAll();
-    while(true){
+    while(true) {
       trigger.read();
       out = out + 1;
       writeAll();
@@ -32,18 +32,18 @@ struct Dummy: public ChimeraTK::ApplicationModule{
   }
 };
 
-template <>
-struct Dummy<std::string>: public ChimeraTK::ApplicationModule{
+template<>
+struct Dummy<std::string> : public ChimeraTK::ApplicationModule {
   using ChimeraTK::ApplicationModule::ApplicationModule;
-  ChimeraTK::ScalarOutput<std::string> out {this, "out", "", "Dummy output", {"DAQ"}};
-  ChimeraTK::ScalarOutput<int> outTrigger {this, "outTrigger", "", "Dummy output"};
-  ChimeraTK::ScalarPushInput<int> trigger {this, "trigger", "" ,"Trigger", {}};
-  void mainLoop() override{
+  ChimeraTK::ScalarOutput<std::string> out{this, "out", "", "Dummy output", {"DAQ"}};
+  ChimeraTK::ScalarOutput<int> outTrigger{this, "outTrigger", "", "Dummy output"};
+  ChimeraTK::ScalarPushInput<int> trigger{this, "trigger", "", "Trigger", {}};
+  void mainLoop() override {
     // The first string will be initalized to "" instead of "0", but we don't care here
     writeAll();
     // Set to 1 so that the second entry will be "1"
     int i = 1;
-    while(true){
+    while(true) {
       trigger.read();
       out = std::to_string(i);
       writeAll();
@@ -52,19 +52,19 @@ struct Dummy<std::string>: public ChimeraTK::ApplicationModule{
   }
 };
 
-template <>
-struct Dummy<bool>: public ChimeraTK::ApplicationModule{
+template<>
+struct Dummy<bool> : public ChimeraTK::ApplicationModule {
   using ChimeraTK::ApplicationModule::ApplicationModule;
-  ChimeraTK::ScalarOutput<ChimeraTK::Boolean> out {this, "out", "", "Dummy output", {"DAQ"}};
-  ChimeraTK::ScalarOutput<int> outTrigger {this, "outTrigger", "", "Dummy output"};
-  ChimeraTK::ScalarPushInput<int> trigger {this, "trigger", "" ,"Trigger", {}};
-  void mainLoop() override{
+  ChimeraTK::ScalarOutput<ChimeraTK::Boolean> out{this, "out", "", "Dummy output", {"DAQ"}};
+  ChimeraTK::ScalarOutput<int> outTrigger{this, "outTrigger", "", "Dummy output"};
+  ChimeraTK::ScalarPushInput<int> trigger{this, "trigger", "", "Trigger", {}};
+  void mainLoop() override {
     // The first string will be initalized to "" instead of "0", but we don't care here
     writeAll();
     // Set to 1 so that the second entry will be "1"
     int i = 1;
     out = false;
-    while(true){
+    while(true) {
       trigger.read();
       out = !out;
       writeAll();
@@ -73,38 +73,39 @@ struct Dummy<bool>: public ChimeraTK::ApplicationModule{
   }
 };
 
-template <typename UserType>
-struct DummyArray: public ChimeraTK::ApplicationModule{
+template<typename UserType>
+struct DummyArray : public ChimeraTK::ApplicationModule {
   using ChimeraTK::ApplicationModule::ApplicationModule;
-  ChimeraTK::ArrayOutput<UserType> out {this, "out", "", 10, "Dummy output", {"DAQ"}};
-  ChimeraTK::ScalarOutput<int> outTrigger {this, "outTrigger", "", "DAQ trigger", {"DAQ"}};
-  ChimeraTK::ScalarPushInput<int> trigger {this, "trigger", "" ,"Trigger", {}};
+  ChimeraTK::ArrayOutput<UserType> out{this, "out", "", 10, "Dummy output", {"DAQ"}};
+  ChimeraTK::ScalarOutput<int> outTrigger{this, "outTrigger", "", "DAQ trigger", {"DAQ"}};
+  ChimeraTK::ScalarPushInput<int> trigger{this, "trigger", "", "Trigger", {}};
 
-  void mainLoop() override{
-    out = {0,1,2,3,4,5,6,7,8,9};
+  void mainLoop() override {
+    out = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     out.write();
     outTrigger.write();
-    while(true){
+    while(true) {
       trigger.read();
-      std::transform(out.begin(), out.end(), out.begin(), [](UserType x){return x+1;});
-      outTrigger =  outTrigger + 1;
+      std::transform(out.begin(), out.end(), out.begin(), [](UserType x) { return x + 1; });
+      outTrigger = outTrigger + 1;
       writeAll();
     }
   }
 };
 
-template <>
-struct DummyArray<std::string>: public ChimeraTK::ApplicationModule{
+template<>
+struct DummyArray<std::string> : public ChimeraTK::ApplicationModule {
   using ChimeraTK::ApplicationModule::ApplicationModule;
-  ChimeraTK::ArrayOutput<std::string> out {this, "out", "", 10, "Dummy output", {"DAQ"}};
-  ChimeraTK::ScalarOutput<int> outTrigger {this, "outTrigger", "", "Dummy output"};
-  ChimeraTK::ScalarPushInput<int> trigger {this, "trigger", "" ,"Trigger", {}};
-  void mainLoop() override{
-    out = {"0","1","2","3","4","5","6","7","8","9"};
+  ChimeraTK::ArrayOutput<std::string> out{this, "out", "", 10, "Dummy output", {"DAQ"}};
+  ChimeraTK::ScalarOutput<int> outTrigger{this, "outTrigger", "", "Dummy output"};
+  ChimeraTK::ScalarPushInput<int> trigger{this, "trigger", "", "Trigger", {}};
+  void mainLoop() override {
+    out = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
     writeAll();
-    while(true){
+    while(true) {
       trigger.read();
-      std::transform(out.begin(), out.end(), out.begin(), [](std::string val){ return std::to_string(std::stoi(val) + 1);});
+      std::transform(
+          out.begin(), out.end(), out.begin(), [](std::string val) { return std::to_string(std::stoi(val) + 1); });
       out.write();
       // here also out1 is written. No reason for setting a certain value
       writeAll();
@@ -112,21 +113,21 @@ struct DummyArray<std::string>: public ChimeraTK::ApplicationModule{
   }
 };
 
-template <>
-struct DummyArray<bool>: public ChimeraTK::ApplicationModule{
+template<>
+struct DummyArray<bool> : public ChimeraTK::ApplicationModule {
   using ChimeraTK::ApplicationModule::ApplicationModule;
-  ChimeraTK::ArrayOutput<ChimeraTK::Boolean> out {this, "out", "", 10, "Dummy output", {"DAQ"}};
-  ChimeraTK::ScalarOutput<int> outTrigger {this, "outTrigger", "", "DAQ trigger", {"DAQ"}};
-  ChimeraTK::ScalarPushInput<int> trigger {this, "trigger", "" ,"Trigger", {}};
+  ChimeraTK::ArrayOutput<ChimeraTK::Boolean> out{this, "out", "", 10, "Dummy output", {"DAQ"}};
+  ChimeraTK::ScalarOutput<int> outTrigger{this, "outTrigger", "", "DAQ trigger", {"DAQ"}};
+  ChimeraTK::ScalarPushInput<int> trigger{this, "trigger", "", "Trigger", {}};
 
-  void mainLoop() override{
-    out = {true,false,true,false,true,false,true,false,true,false};
+  void mainLoop() override {
+    out = {true, false, true, false, true, false, true, false, true, false};
     out.write();
     outTrigger.write();
-    while(true){
+    while(true) {
       trigger.read();
-      std::transform(out.begin(), out.end(), out.begin(), [](bool x){return !x;});
-      outTrigger =  outTrigger + 1;
+      std::transform(out.begin(), out.end(), out.begin(), [](bool x) { return !x; });
+      outTrigger = outTrigger + 1;
       writeAll();
     }
   }
@@ -136,14 +137,15 @@ struct DummyArray<bool>: public ChimeraTK::ApplicationModule{
  * Define a test app to test the MicroDAQModule.
  */
 struct DeviceDummyApp : public ChimeraTK::Application {
-  DeviceDummyApp(const std::string& configFile) : Application("test"){
+  DeviceDummyApp(const std::string& configFile) : Application("test") {
     char temName[] = "/tmp/uDAQ.XXXXXX";
-    char *dir_name = mkdtemp(temName);
+    char* dir_name = mkdtemp(temName);
     dir = std::string(dir_name);
     // new fresh directory
     boost::filesystem::create_directory(dir);
     config.reset(new ChimeraTK::ConfigReader{this, "Configuration", configFile});
-    daq = ChimeraTK::MicroDAQ<int>{this,"MicroDAQ", "DAQ module", "DAQ", "/Dummy/outTrigger", ChimeraTK::HierarchyModifier::none};
+    daq = ChimeraTK::MicroDAQ<int>{
+        this, "MicroDAQ", "DAQ module", "DAQ", "/Dummy/outTrigger", ChimeraTK::HierarchyModifier::none};
   }
   ~DeviceDummyApp() override { shutdown(); }
 
@@ -151,7 +153,7 @@ struct DeviceDummyApp : public ChimeraTK::Application {
   // somehow without an module the application does not start...
   Dummy<int32_t> module{this, "Dummy", "Module used as trigger"};
   std::unique_ptr<ChimeraTK::ConfigReader> config;
-  ChimeraTK::ConnectingDeviceModule dev{this,"Dummy", "/Dummy/outTrigger"};
+  ChimeraTK::ConnectingDeviceModule dev{this, "Dummy", "/Dummy/outTrigger"};
   ChimeraTK::MicroDAQ<int> daq;
   void defineConnections() override {
     ChimeraTK::ControlSystemModule cs;
@@ -163,4 +165,3 @@ struct DeviceDummyApp : public ChimeraTK::Application {
     dumpConnections();
   }
 };
-

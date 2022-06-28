@@ -29,8 +29,7 @@
 #include <boost/fusion/container/map.hpp>
 using namespace boost::unit_test_framework;
 
-
-BOOST_AUTO_TEST_CASE ( test_device_daq ){
+BOOST_AUTO_TEST_CASE(test_device_daq) {
   ChimeraTK::BackendFactory::getInstance().setDMapFilePath("dummy.dmap");
   DeviceDummyApp app("device_test_ROOT.xml");
 
@@ -40,20 +39,20 @@ BOOST_AUTO_TEST_CASE ( test_device_daq ){
   ChimeraTK::TestFacility tf;
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
-  tf.setScalarDefault("/MicroDAQ/enable", (int)1);
+  tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);
   tf.setScalarDefault("/MicroDAQ/directory", app.dir);
   tf.runApplication();
-  for(size_t j = 0; j < 9; j++){
+  for(size_t j = 0; j < 9; j++) {
     // initial value is already written to file at this point - so the next entry should be 1 and not 0!
     // in the dummy this is realised by calling out = out+1
-    tf.writeScalar("/MyModule/actuator",(int)(j+1));
-    readback = (int)(j+1);
+    tf.writeScalar("/MyModule/actuator", (int)(j + 1));
+    readback = (int)(j + 1);
     readback.write();
-    tf.writeScalar("/Dummy/trigger",(int)j);
+    tf.writeScalar("/Dummy/trigger", (int)j);
     tf.stepApplication();
   }
   TChain* ch = new TChain("data");
-  ch->Add((app.dir+ "/*.root").c_str());
+  ch->Add((app.dir + "/*.root").c_str());
   BOOST_CHECK_NE(0, ch->GetEntries());
   int data[3];
   ch->SetBranchAddress("MyModule.actuator", &data[0]);
