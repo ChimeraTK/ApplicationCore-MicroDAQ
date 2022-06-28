@@ -230,7 +230,7 @@ namespace ChimeraTK {
         "", "Directory where to store the DAQ data. If not set a subdirectory called uDAQ in the current directory is used.",
         _tags};
 
-    ScalarPollInput<int> enable{this, "enable", "", "DAQ is active when set to 0 and disabled when set to 0.", _tags};
+    ScalarPollInput<ChimeraTK::Boolean> enable{this, "activate", "", "Activate the DAQ.", _tags};
 
     ScalarPollInput<uint32_t> nMaxFiles{this, "nMaxFiles", "",
         "Maximum number of files in the ring buffer "
@@ -249,7 +249,7 @@ namespace ChimeraTK {
     ScalarOutput<uint32_t> currentEntry{
         this, "currentEntry", "", "Last entry number written. Is reset with every new file.", _tags};
 
-    ScalarOutput<uint32_t> errorStatus{
+    ScalarOutput<ChimeraTK::Boolean> errorStatus{
         this, "DAQError", "", "True in case an error occurred. Reset by toggling enable.", _tags};
 
     virtual void addSource(const Module& source, const RegisterPath& namePrefix = "");
