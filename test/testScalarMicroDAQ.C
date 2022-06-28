@@ -62,13 +62,13 @@ BOOST_AUTO_TEST_CASE(test_directory_access) {
   ChimeraTK::TestFacility tf;
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
-  tf.setScalarDefault("/MicroDAQ/enable", (int)1);
+  tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);
   tf.setScalarDefault("/MicroDAQ/directory", (std::string) "/NonExistingFolder/");
   tf.runApplication();
 
   tf.writeScalar("/Dummy/trigger", (int)0);
   tf.stepApplication();
-  BOOST_CHECK_EQUAL(tf.readScalar<uint32_t>("/MicroDAQ/DAQError"), 1);
+  BOOST_CHECK_EQUAL(tf.readScalar<ChimeraTK::Boolean>("/MicroDAQ/DAQError"), 1);
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_dummy, T, test_types) {
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_dummy, T, test_types) {
   ChimeraTK::TestFacility tf;
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
-  tf.setScalarDefault("/MicroDAQ/enable", (int)1);
+  tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);
   tf.setScalarDefault("/MicroDAQ/directory", app.dir);
   tf.runApplication();
 

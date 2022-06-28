@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_scalar, T, test_types) {
   ChimeraTK::TestFacility tf;
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
-  tf.setScalarDefault("/MicroDAQ/enable", (int)1);
+  tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);
   tf.setScalarDefault("/MicroDAQ/directory", app.dir);
   tf.runApplication();
 
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_array, T, test_types) {
   ChimeraTK::TestFacility tf;
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
-  tf.setScalarDefault("/MicroDAQ/enable", (int)1);
+  tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);
   tf.setScalarDefault("/MicroDAQ/directory", app.dir);
   tf.runApplication();
 
