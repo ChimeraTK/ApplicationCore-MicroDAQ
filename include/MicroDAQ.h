@@ -46,12 +46,12 @@ namespace ChimeraTK {
      *  As data source all variables provided by the owner and its submodules matching the specified inputTag is used.
      *
      *  In the config file, the following variables are required:
-     *  - MicroDAQ/enable (int32): boolean flag whether the MicroDAQ system is enabled or not
-     *  - MicroDAQ/outputFormat (string): format of the output data, either "hdf5" or "root"
-     *  - MicroDAQ/decimationFactor (uint32): decimation factor applied to large arrays (above decimationThreshold)
-     *  - MicroDAQ/decimationThreshold (uint32): array size threshold above which the decimationFactor is applied
+     *  - Configuration/MicroDAQ/enable (int32): boolean flag whether the MicroDAQ system is enabled or not
+     *  - Configuration/MicroDAQ/outputFormat (string): format of the output data, either "hdf5" or "root"
+     *  - Configuration/MicroDAQ/decimationFactor (uint32): decimation factor applied to large arrays (above decimationThreshold)
+     *  - Configuration/MicroDAQ/decimationThreshold (uint32): array size threshold above which the decimationFactor is applied
      *
-     *  If MicroDAQ/enable == 0, all other variables can be omitted.
+     *  If Configuration/MicroDAQ/enable == 0, all other variables can be omitted.
      */
     MicroDAQ(EntityOwner* owner, const std::string& name, const std::string& description, const std::string& inputTag,
         const std::string& pathToTrigger, HierarchyModifier hierarchyModifier = HierarchyModifier::none,

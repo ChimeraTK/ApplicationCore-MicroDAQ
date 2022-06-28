@@ -33,15 +33,15 @@ namespace ChimeraTK {
       const std::unordered_set<std::string>& tags)
   : ModuleGroup(owner, name, "", HierarchyModifier::hideThis) {
     // do nothing if the entire module is disabled
-    if(appConfig().template get<int>("MicroDAQ/enable") == false) return;
+    if(appConfig().template get<int>("Configuration/MicroDAQ/enable") == false) return;
 
     // obtain desired output format from configuration and convert to lower case
-    auto type = appConfig().template get<std::string>("MicroDAQ/outputFormat");
+    auto type = appConfig().template get<std::string>("Configuration/MicroDAQ/outputFormat");
     std::transform(type.begin(), type.end(), type.begin(), [](unsigned char c) { return std::tolower(c); });
 
     // obtain decimation factor from configuration
-    uint32_t decimationFactor = appConfig().template get<uint32_t>("MicroDAQ/decimationFactor");
-    uint32_t decimationThreshold = appConfig().template get<uint32_t>("MicroDAQ/decimationThreshold");
+    uint32_t decimationFactor = appConfig().template get<uint32_t>("Configuration/MicroDAQ/decimationFactor");
+    uint32_t decimationThreshold = appConfig().template get<uint32_t>("Configuration/MicroDAQ/decimationThreshold");
 
     // instantiate DAQ implementation for the desired output format
     if(type == "hdf5") {

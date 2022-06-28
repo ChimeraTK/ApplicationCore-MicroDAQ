@@ -1,8 +1,10 @@
 <configuration>
-  <module name="MicroDAQ">
-    <variable name="enable" type="int32" value="1"/>
-    <variable name="outputFormat" type="string" value="root"/>
-    <variable name="decimationFactor" type="uint32" value="10"/>
-    <variable name="decimationThreshold" type="uint32" value="200000"/>
+  <module name="Configuration">
+    <module name="MicroDAQ">
+      <variable name="enable" type="int32" value="1"/>
+      <variable name="outputFormat" type="string" value="root"/>
+      <variable name="decimationFactor" type="uint32" value="10"/>
+      <variable name="decimationThreshold" type="uint32" value="200000"/>
+    </module>
   </module>
 </configuration>
