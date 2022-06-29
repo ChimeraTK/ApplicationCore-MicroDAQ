@@ -97,6 +97,7 @@ namespace ChimeraTK {
         if(typeid(typename PAIR::first_type) != _feeder.getValueType()) return;
 
         // register connection
+        //\ToDo: Maybe remove try catch block by other solution.
         try {
           if(_feeder.getMode() == UpdateMode::poll && _feeder.getDirection().dir == VariableDirection::feeding)
             _feeder[_owner->triggerGroup.trigger] >> _owner->template getAccessor<typename PAIR::first_type>(_name);
@@ -104,8 +105,6 @@ namespace ChimeraTK {
             _feeder >> _owner->template getAccessor<typename PAIR::first_type>(_name);
         }
         catch(ChimeraTK::logic_error& e) {
-          std::cout << "Failed to add accessor with name: " << _name << ", because it is already registered for DAQ."
-                    << std::endl;
           return;
         }
       }
