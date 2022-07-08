@@ -6,7 +6,6 @@
  */
 
 #include <H5Cpp.h>
-#include <H5File.h>
 
 #include "MicroDAQHDF5.h"
 
