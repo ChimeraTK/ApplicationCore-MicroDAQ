@@ -5,14 +5,13 @@
  *      Author: Klaus Zenker (HZDR)
  */
 
-#ifndef INCLUDE_MICRODAQROOT_H_
-#define INCLUDE_MICRODAQROOT_H_
-
-#include <ChimeraTK/SupportedUserTypes.h>
-#include <ChimeraTK/ApplicationCore/ArrayAccessor.h>
-#include <ChimeraTK/ApplicationCore/VariableGroup.h>
+#pragma once
 
 #include "MicroDAQ.h"
+
+#include <ChimeraTK/ApplicationCore/ArrayAccessor.h>
+#include <ChimeraTK/ApplicationCore/VariableGroup.h>
+#include <ChimeraTK/SupportedUserTypes.h>
 
 namespace ChimeraTK {
 
@@ -27,6 +26,9 @@ namespace ChimeraTK {
     struct ROOTDataWriter;
 
   } // namespace detail
+
+  /********************************************************************************************************************/
+
   /**
    *  MicroDAQ module for logging data to ROOT files. This can be useful in
    * environments where no sufficient logging of data is possible through the
@@ -42,12 +44,11 @@ namespace ChimeraTK {
       * size bigger than decimationThreshold will be decimated by decimationFactor
       * before writing to the ROOT file.
       */
-    RootDAQ(EntityOwner* owner, const std::string& name, const std::string& description, uint32_t decimationFactor = 10,
-        uint32_t decimationThreshold = 1000, HierarchyModifier hierarchyModifier = HierarchyModifier::none,
-        const std::unordered_set<std::string>& tags = {}, const std::string& pathToTrigger = "trigger",
-        const std::string& treeName = "data")
-    : BaseDAQ<TRIGGERTYPE>(owner, name, description, ".root", decimationFactor, decimationThreshold, hierarchyModifier,
-          tags, pathToTrigger),
+    RootDAQ(ModuleGroup* owner, const std::string& name, const std::string& description, uint32_t decimationFactor = 10,
+        uint32_t decimationThreshold = 1000, const std::unordered_set<std::string>& tags = {},
+        const std::string& pathToTrigger = "trigger", const std::string& treeName = "data")
+    : BaseDAQ<TRIGGERTYPE>(
+          owner, name, description, ".root", decimationFactor, decimationThreshold, tags, pathToTrigger),
       _treeName(treeName) {
       flushAfterNEntries.addTags(tags);
     }
@@ -73,7 +74,11 @@ namespace ChimeraTK {
     friend struct detail::ROOTTreeCreator<TRIGGERTYPE>;
     friend struct detail::ROOTDataWriter<TRIGGERTYPE>;
   };
-  DECLARE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(RootDAQ);
-} // namespace ChimeraTK
 
-#endif /* INCLUDE_MICRODAQROOT_H_ */
+  /********************************************************************************************************************/
+
+  DECLARE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(RootDAQ);
+
+  /********************************************************************************************************************/
+
+} // namespace ChimeraTK

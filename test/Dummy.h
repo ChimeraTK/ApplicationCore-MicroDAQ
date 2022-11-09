@@ -14,12 +14,16 @@
 typedef boost::mpl::list<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float, double, bool, std::string>
     test_types;
 
+/********************************************************************************************************************/
+
 template<typename UserType>
 struct Dummy : public ChimeraTK::ApplicationModule {
   using ChimeraTK::ApplicationModule::ApplicationModule;
+
   ChimeraTK::ScalarOutput<UserType> out{this, "out", "", "Dummy output", {"DAQ"}};
   ChimeraTK::ScalarOutput<int> outTrigger{this, "outTrigger", "", "Dummy output"};
   ChimeraTK::ScalarPushInput<int> trigger{this, "trigger", "", "Trigger", {}};
+
   void mainLoop() override {
     out = 0;
     // This also writes outTrigger!
@@ -31,6 +35,8 @@ struct Dummy : public ChimeraTK::ApplicationModule {
     }
   }
 };
+
+/********************************************************************************************************************/
 
 template<>
 struct Dummy<std::string> : public ChimeraTK::ApplicationModule {
@@ -51,6 +57,8 @@ struct Dummy<std::string> : public ChimeraTK::ApplicationModule {
     }
   }
 };
+
+/********************************************************************************************************************/
 
 template<>
 struct Dummy<bool> : public ChimeraTK::ApplicationModule {
@@ -73,6 +81,8 @@ struct Dummy<bool> : public ChimeraTK::ApplicationModule {
   }
 };
 
+/********************************************************************************************************************/
+
 template<typename UserType>
 struct DummyArray : public ChimeraTK::ApplicationModule {
   using ChimeraTK::ApplicationModule::ApplicationModule;
@@ -92,6 +102,8 @@ struct DummyArray : public ChimeraTK::ApplicationModule {
     }
   }
 };
+
+/********************************************************************************************************************/
 
 template<>
 struct DummyArray<std::string> : public ChimeraTK::ApplicationModule {
@@ -113,6 +125,8 @@ struct DummyArray<std::string> : public ChimeraTK::ApplicationModule {
   }
 };
 
+/********************************************************************************************************************/
+
 template<>
 struct DummyArray<bool> : public ChimeraTK::ApplicationModule {
   using ChimeraTK::ApplicationModule::ApplicationModule;
@@ -133,35 +147,4 @@ struct DummyArray<bool> : public ChimeraTK::ApplicationModule {
   }
 };
 
-/**
- * Define a test app to test the MicroDAQModule.
- */
-struct DeviceDummyApp : public ChimeraTK::Application {
-  DeviceDummyApp(const std::string& configFile) : Application("test") {
-    char temName[] = "/tmp/uDAQ.XXXXXX";
-    char* dir_name = mkdtemp(temName);
-    dir = std::string(dir_name);
-    // new fresh directory
-    boost::filesystem::create_directory(dir);
-    config.reset(new ChimeraTK::ConfigReader{this, "Configuration", configFile});
-    daq = ChimeraTK::MicroDAQ<int>{
-        this, "MicroDAQ", "DAQ module", "DAQ", "/Dummy/outTrigger", ChimeraTK::HierarchyModifier::none};
-  }
-  ~DeviceDummyApp() override { shutdown(); }
-
-  std::string dir;
-  // somehow without an module the application does not start...
-  Dummy<int32_t> module{this, "Dummy", "Module used as trigger"};
-  std::unique_ptr<ChimeraTK::ConfigReader> config;
-  ChimeraTK::ConnectingDeviceModule dev{this, "Dummy", "/Dummy/outTrigger"};
-  ChimeraTK::MicroDAQ<int> daq;
-  void defineConnections() override {
-    ChimeraTK::ControlSystemModule cs;
-    findTag(".*").connectTo(cs);
-    daq.addDeviceModule(dev.getDeviceModule());
-  }
-  void initialise() override {
-    Application::initialise();
-    dumpConnections();
-  }
-};
+/********************************************************************************************************************/

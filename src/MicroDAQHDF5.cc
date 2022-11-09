@@ -10,10 +10,9 @@
 #include "MicroDAQHDF5.h"
 
 namespace ChimeraTK {
-
-  /*********************************************************************************************************************/
-
   namespace detail {
+
+    /******************************************************************************************************************/
 
     template<typename TRIGGERTYPE>
     struct H5storage {
@@ -53,7 +52,7 @@ namespace ChimeraTK {
       std::vector<TransferElementID> _accessorsWithTrigger;
     };
 
-    /*********************************************************************************************************************/
+    /******************************************************************************************************************/
 
     template<typename TRIGGERTYPE>
     struct H5DataSpaceCreator {
@@ -102,7 +101,7 @@ namespace ChimeraTK {
 
   } // namespace detail
 
-  /*********************************************************************************************************************/
+  /********************************************************************************************************************/
 
   template<typename TRIGGERTYPE>
   void HDF5DAQ<TRIGGERTYPE>::mainLoop() {
@@ -116,7 +115,7 @@ namespace ChimeraTK {
         BaseDAQ<TRIGGERTYPE>::_accessorListMap.table, detail::H5DataSpaceCreator<TRIGGERTYPE>(storage));
 
     // add trigger
-    storage._accessorsWithTrigger.push_back(BaseDAQ<TRIGGERTYPE>::triggerGroup.trigger.getId());
+    storage._accessorsWithTrigger.push_back(BaseDAQ<TRIGGERTYPE>::trigger.getId());
 
     // sort group list and make unique to make sure lower levels get created first
     storage.groupList.sort();
@@ -134,7 +133,7 @@ namespace ChimeraTK {
     }
   }
 
-  /*********************************************************************************************************************/
+  /********************************************************************************************************************/
 
   namespace detail {
 
@@ -201,7 +200,7 @@ namespace ChimeraTK {
       }
     }
 
-    /*********************************************************************************************************************/
+    /******************************************************************************************************************/
 
     template<typename TRIGGERTYPE>
     struct H5DataWriter {
@@ -245,7 +244,7 @@ namespace ChimeraTK {
       H5storage<TRIGGERTYPE>& _storage;
     };
 
-    /*********************************************************************************************************************/
+    /******************************************************************************************************************/
 
     template<typename TRIGGERTYPE>
     template<typename UserType>
@@ -263,7 +262,7 @@ namespace ChimeraTK {
       dataset.write(buffer.data(), H5::PredType::NATIVE_FLOAT);
     }
 
-    /*********************************************************************************************************************/
+    /******************************************************************************************************************/
 
     template<typename TRIGGERTYPE>
     void H5storage<TRIGGERTYPE>::writeData() {
@@ -293,7 +292,7 @@ namespace ChimeraTK {
       boost::fusion::for_each(_owner->BaseDAQ<TRIGGERTYPE>::_accessorListMap.table, H5DataWriter<TRIGGERTYPE>(*this));
     }
 
-    /*********************************************************************************************************************/
+    /******************************************************************************************************************/
 
   } // namespace detail
 
