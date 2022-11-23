@@ -5,11 +5,11 @@
  *      Author: Klaus Zenker (HZDR)
  */
 
-#include <boost/mpl/list.hpp>
+#include "MicroDAQ.h"
 
 #include <ChimeraTK/ApplicationCore/ApplicationCore.h>
 
-#include "MicroDAQ.h"
+#include <boost/mpl/list.hpp>
 
 typedef boost::mpl::list<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float, double, bool, std::string>
     test_types;
@@ -148,3 +148,33 @@ struct DummyArray<bool> : public ChimeraTK::ApplicationModule {
 };
 
 /********************************************************************************************************************/
+
+/**
+ * Define a test app to test adding device modules to the MicroDAQ module
+ */
+struct DeviceDummyApp : public ChimeraTK::Application {
+  DeviceDummyApp(const std::string& configFile, const std::string& namePrefix = "", const std::string& subModule = "")
+  : Application("test"), config(this, "Configuration", configFile) {
+    // cleanup from previous run
+    char temName[] = "/tmp/uDAQ.XXXXXX";
+    char* dir_name = mkdtemp(temName);
+    dir = std::string(dir_name);
+
+    // new fresh directory
+    boost::filesystem::create_directory(dir);
+
+    // add device as source
+    daq.addDeviceModule(dev, namePrefix, subModule);
+  }
+  ~DeviceDummyApp() override { shutdown(); }
+
+  ChimeraTK::SetDMapFilePath dmap{"dummy.dmap"};
+
+  std::string dir;
+
+  // somehow without an module the application does not start...
+  Dummy<int32_t> module{this, "Dummy", "Module used as trigger"};
+  ChimeraTK::ConfigReader config;
+  ChimeraTK::DeviceModule dev{this, "Dummy", "/Dummy/outTrigger"};
+  ChimeraTK::MicroDAQ<int> daq{this, "MicroDAQ", "DAQ module", "DAQ", "/Dummy/outTrigger"};
+};

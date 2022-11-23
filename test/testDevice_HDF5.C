@@ -31,41 +31,8 @@ using namespace H5;
 using namespace boost::unit_test_framework;
 #undef BOOST_NO_EXCEPTIONS
 
-/********************************************************************************************************************/
-
-/**
- * Define a test app to test adding device modules to the MicroDAQ module
- */
-struct DeviceDummyApp : public ChimeraTK::Application {
-  DeviceDummyApp() : Application("test") {
-    // cleanup from previous run
-    char temName[] = "/tmp/uDAQ.XXXXXX";
-    char* dir_name = mkdtemp(temName);
-    dir = std::string(dir_name);
-
-    // new fresh directory
-    boost::filesystem::create_directory(dir);
-
-    // add device as source
-    daq.addDeviceModule(dev);
-  }
-  ~DeviceDummyApp() override { shutdown(); }
-
-  ChimeraTK::SetDMapFilePath dmap{"dummy.dmap"};
-
-  std::string dir;
-
-  // somehow without an module the application does not start...
-  Dummy<int32_t> module{this, "Dummy", "Module used as trigger"};
-  ChimeraTK::ConfigReader config{this, "Configuration", "device_test_HDF5.xml"};
-  ChimeraTK::DeviceModule dev{this, "Dummy", "/Dummy/outTrigger"};
-  ChimeraTK::MicroDAQ<int> daq{this, "MicroDAQ", "DAQ module", "DAQ", "/Dummy/outTrigger"};
-};
-
-/********************************************************************************************************************/
-
 BOOST_AUTO_TEST_CASE(test_device_daq) {
-  DeviceDummyApp app;
+  DeviceDummyApp app{"device_test_HDF5.xml"};
 
   ChimeraTK::Device dev;
   dev.open("Dummy-Raw");
@@ -128,39 +95,8 @@ BOOST_AUTO_TEST_CASE(test_device_daq) {
 
 /********************************************************************************************************************/
 
-/**
- * Define a test app to test adding device modules with sub-module and prefix specification to the MicroDAQ module
- */
-struct PrefixDeviceDummyApp : public ChimeraTK::Application {
-  PrefixDeviceDummyApp() : Application("test") {
-    // cleanup from previous run
-    char temName[] = "/tmp/uDAQ.XXXXXX";
-    char* dir_name = mkdtemp(temName);
-    dir = std::string(dir_name);
-
-    // new fresh directory
-    boost::filesystem::create_directory(dir);
-
-    // add device as source
-    daq.addDeviceModule(dev, "/some/new/prefix", "/MyModule");
-  }
-  ~PrefixDeviceDummyApp() override { shutdown(); }
-
-  ChimeraTK::SetDMapFilePath dmap{"dummy.dmap"};
-
-  std::string dir;
-
-  // somehow without an module the application does not start...
-  Dummy<int32_t> module{this, "Dummy", "Module used as trigger"};
-  ChimeraTK::ConfigReader config{this, "Configuration", "device_test_HDF5.xml"};
-  ChimeraTK::DeviceModule dev{this, "Dummy", "/Dummy/outTrigger"};
-  ChimeraTK::MicroDAQ<int> daq{this, "MicroDAQ", "DAQ module", "DAQ", "/Dummy/outTrigger"};
-};
-
-/********************************************************************************************************************/
-
 BOOST_AUTO_TEST_CASE(test_device_daq_with_prefix) {
-  PrefixDeviceDummyApp app;
+  DeviceDummyApp app{"device_test_HDF5.xml", "/some/new/prefix", "MyModule"};
 
   ChimeraTK::Device dev;
   dev.open("Dummy-Raw");
