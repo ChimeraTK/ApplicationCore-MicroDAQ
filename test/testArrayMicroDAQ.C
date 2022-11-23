@@ -5,28 +5,24 @@
  *      Author: Klaus Zenker (HZDR)
  */
 
-//#define BOOST_TEST_DYN_LINK
+// #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE MicroDAQTest
 
-#include <fstream>
-#include <algorithm>
+#include "ChimeraTK/ApplicationCore/TestFacility.h"
+#include "data_types.h"
+#include "Dummy.h"
+#include "MicroDAQROOT.h"
+#include "TChain.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/fusion/container/map.hpp>
 #include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
 
-#include "ChimeraTK/ApplicationCore/TestFacility.h"
-#include "ChimeraTK/ApplicationCore/ControlSystemModule.h"
-
-#include "MicroDAQROOT.h"
-#include "data_types.h"
-#include "Dummy.h"
-
-#include "TChain.h"
-
-#include <boost/test/unit_test.hpp>
-#include <boost/fusion/container/map.hpp>
+#include <algorithm>
+#include <fstream>
 using namespace boost::unit_test_framework;
 
 /**
@@ -41,8 +37,11 @@ struct testAppArray : public ChimeraTK::Application {
     dir = std::string(dir_name);
     // new fresh directory
     boost::filesystem::create_directory(dir);
+
+    // add source
+    daq.addSource("/Dummy", "DAQ");
   }
-  ~testAppArray() { shutdown(); }
+  ~testAppArray() override { shutdown(); }
 
   const uint32_t _decimation;
   const uint32_t _decimationThreshold;
@@ -51,15 +50,8 @@ struct testAppArray : public ChimeraTK::Application {
 
   DummyArray<UserType> module{this, "Dummy", "Dummy module"};
 
-  ChimeraTK::RootDAQ<int> daq{this, "MicroDAQ", "Test", _decimation, _decimationThreshold,
-      ChimeraTK::HierarchyModifier::none, {}, "/Dummy/outTrigger", "test"};
-
-  void defineConnections() override {
-    daq.addSource(module.findTag("DAQ"), "DAQ");
-    ChimeraTK::ControlSystemModule cs;
-    findTag(".*").connectTo(cs);
-    dumpConnections();
-  }
+  ChimeraTK::RootDAQ<int> daq{
+      this, "MicroDAQ", "Test", _decimation, _decimationThreshold, {}, "/Dummy/outTrigger", "test"};
 };
 
 typedef boost::fusion::map<boost::fusion::pair<int8_t, size_t>, boost::fusion::pair<uint8_t, size_t>,
@@ -103,37 +95,37 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_dummy_array, T, test_types) {
   if(t == 0) {
     arr = as.get();
     auto p = as.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   else if(t == 1) {
     arr = ai.get();
     auto p = ai.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   else if(t == 2) {
     arr = al.get();
     auto p = al.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   else if(t == 3) {
     arr = af.get();
     auto p = af.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   else if(t == 4) {
     arr = ad.get();
     auto p = ad.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   else if(t == 5) {
     arr = ac.get();
     auto p = ac.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   else if(t == 6) {
     arr = astr.get();
     auto p = astr.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   ch->GetEvent(4);
   if constexpr(std::is_same<T, bool>::value) {
@@ -187,37 +179,37 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_decimation, T, test_types) {
   if(t == 0) {
     arr = as.get();
     auto p = as.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   else if(t == 1) {
     arr = ai.get();
     auto p = ai.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   else if(t == 2) {
     arr = al.get();
     auto p = al.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   else if(t == 3) {
     arr = af.get();
     auto p = af.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   else if(t == 4) {
     arr = ad.get();
     auto p = ad.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   else if(t == 5) {
     arr = ac.get();
     auto p = ac.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   else if(t == 6) {
     arr = astr.get();
     auto p = astr.get();
-    ch->SetBranchAddress("DAQ.out", &p);
+    ch->SetBranchAddress("Dummy.out", &p);
   }
   ch->GetEvent(1);
   // array is 1,3,5,7,9

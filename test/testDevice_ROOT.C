@@ -7,26 +7,22 @@
 
 #define BOOST_TEST_MODULE MicroDAQDeviceTest
 
-#include <memory>
-
-#include "ChimeraTK/ApplicationCore/TestFacility.h"
-#include "ChimeraTK/ApplicationCore/ControlSystemModule.h"
 #include "ChimeraTK/ApplicationCore/DeviceModule.h"
 #include "ChimeraTK/ApplicationCore/ScalarAccessor.h"
-
-#include "MicroDAQROOT.h"
-
-#include "H5Cpp.h"
+#include "ChimeraTK/ApplicationCore/TestFacility.h"
 #include "Dummy.h"
-
+#include "H5Cpp.h"
+#include "MicroDAQROOT.h"
 #include "TChain.h"
 
-#include <boost/test/included/unit_test.hpp>
-#include <boost/thread.hpp>
-#include <boost/format.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/test/unit_test.hpp>
+#include <boost/format.hpp>
 #include <boost/fusion/container/map.hpp>
+#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
+#include <boost/thread.hpp>
+
+#include <memory>
 using namespace boost::unit_test_framework;
 
 BOOST_AUTO_TEST_CASE(test_device_daq) {
