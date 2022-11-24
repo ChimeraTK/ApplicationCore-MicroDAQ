@@ -50,7 +50,7 @@ struct testApp : public ChimeraTK::Application {
 
 BOOST_AUTO_TEST_CASE(test_directory_access) {
   testApp<int32_t> app;
-  ChimeraTK::TestFacility tf;
+  ChimeraTK::TestFacility tf(app);
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
   tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(test_directory_access) {
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_dummy, T, test_types) {
   testApp<T> app;
-  ChimeraTK::TestFacility tf;
+  ChimeraTK::TestFacility tf(app);
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
   tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);

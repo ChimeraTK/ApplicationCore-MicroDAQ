@@ -8,18 +8,18 @@
 #pragma once
 
 #include <ChimeraTK/ApplicationCore/ApplicationModule.h>
-#include <ChimeraTK/ApplicationCore/ScalarAccessor.h>
 #include <ChimeraTK/ApplicationCore/ArrayAccessor.h>
-#include <ChimeraTK/ApplicationCore/VariableGroup.h>
-#include <ChimeraTK/ApplicationCore/ModuleGroup.h>
 #include <ChimeraTK/ApplicationCore/ConfigReader.h>
 #include <ChimeraTK/ApplicationCore/HierarchyModifyingGroup.h>
+#include <ChimeraTK/ApplicationCore/ModuleGroup.h>
+#include <ChimeraTK/ApplicationCore/ScalarAccessor.h>
+#include <ChimeraTK/ApplicationCore/VariableGroup.h>
 
 #include <boost/filesystem.hpp>
 
-#include <map>
 #include <algorithm>
 #include <cctype>
+#include <map>
 #include <string>
 
 namespace ChimeraTK {
@@ -92,9 +92,9 @@ namespace ChimeraTK {
     BaseDAQ(ModuleGroup* owner, const std::string& name, const std::string& description, const std::string& suffix,
         uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000,
         const std::unordered_set<std::string>& tags = {}, const std::string& pathToTrigger = "trigger")
-    : ApplicationModule(owner, name, description, tags), _decimationFactor(decimationFactor),
-      _decimationThreshold(decimationThreshold), _daqDefaultPath((boost::filesystem::current_path() / "uDAQ").string()),
-      _suffix(suffix), trigger(this, pathToTrigger, "", "", {_tagExcludeInternals}) {}
+    : ApplicationModule(owner, name, description, tags), trigger(this, pathToTrigger, "", "", {_tagExcludeInternals}),
+      _decimationFactor(decimationFactor), _decimationThreshold(decimationThreshold),
+      _daqDefaultPath((boost::filesystem::current_path() / "uDAQ").string()), _suffix(suffix) {}
 
     BaseDAQ() : _decimationFactor(0), _decimationThreshold(0) {}
 

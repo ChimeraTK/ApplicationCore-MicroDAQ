@@ -68,7 +68,7 @@ myMap m(boost::fusion::make_pair<int8_t>(0), boost::fusion::make_pair<uint8_t>(0
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_dummy_array, T, test_types) {
   testAppArray<T> app;
-  ChimeraTK::TestFacility tf;
+  ChimeraTK::TestFacility tf(app);
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
   tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_dummy_array, T, test_types) {
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_decimation, T, test_types) {
   testAppArray<T> app(2, 5);
-  ChimeraTK::TestFacility tf;
+  ChimeraTK::TestFacility tf(app);
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
   tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);

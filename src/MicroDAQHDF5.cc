@@ -5,9 +5,9 @@
  *      Author: Klaus Zenker (HZDR)
  */
 
-#include <H5Cpp.h>
-
 #include "MicroDAQHDF5.h"
+
+#include <H5Cpp.h>
 
 namespace ChimeraTK {
   namespace detail {
@@ -154,7 +154,7 @@ namespace ChimeraTK {
 
         // open file
         try {
-          outFile = H5::H5File((_owner->_daqPath / filename).c_str(), H5F_ACC_TRUNC);
+          outFile.openFile((_owner->_daqPath / filename).c_str(), H5F_ACC_TRUNC);
         }
         catch(H5::FileIException&) {
           return;

@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(test_device_daq) {
   ChimeraTK::Device dev;
   dev.open("Dummy-Raw");
   auto readback = dev.getScalarRegisterAccessor<int>("/MyModule/readback");
-  ChimeraTK::TestFacility tf;
+  ChimeraTK::TestFacility tf(app);
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
   tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);
