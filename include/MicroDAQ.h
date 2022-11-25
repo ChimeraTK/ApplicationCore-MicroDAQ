@@ -23,10 +23,6 @@
 #include <string>
 
 namespace ChimeraTK {
-  namespace detail {
-    template<typename TRIGGERTYPE>
-    struct BaseDAQAccessorAttacher;
-  } // namespace detail
 
   template<typename TRIGGERTYPE>
   class BaseDAQ;
@@ -145,8 +141,6 @@ namespace ChimeraTK {
     void addSource(const std::string& qualifiedDirectoryPath, const std::string& inputTag);
 
     void mainLoop() override = 0;
-
-    friend struct detail::BaseDAQAccessorAttacher<TRIGGERTYPE>;
 
     /**
      * Visitor function for use with the ApplicationCore Model to add PVs as DAQ sources
