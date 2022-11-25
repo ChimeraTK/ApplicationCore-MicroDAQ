@@ -18,7 +18,7 @@ namespace ChimeraTK {
     struct H5storage {
       H5storage(HDF5DAQ<TRIGGERTYPE>* owner) : _owner(owner) {}
 
-      H5::H5File outFile;
+      std::unique_ptr<H5::H5File> outFile{};
       std::string currentGroupName;
 
       /** Unique list of groups, used to create the groups in the file */
@@ -154,7 +154,7 @@ namespace ChimeraTK {
 
         // open file
         try {
-          outFile.openFile((_owner->_daqPath / filename).c_str(), H5F_ACC_TRUNC);
+          outFile.reset(new H5::H5File{(_owner->_daqPath / filename).c_str(), H5F_ACC_TRUNC});
         }
         catch(H5::FileIException&) {
           return;
@@ -162,7 +162,7 @@ namespace ChimeraTK {
         isOpened = true;
       }
       else if(isOpened && _owner->enable == 0) {
-        outFile.close();
+        outFile->close();
         isOpened = false;
         _owner->disableDAQ();
       }
@@ -194,7 +194,7 @@ namespace ChimeraTK {
       if(isOpened) {
         if(_owner->maxEntriesReached()) {
           // just close the file here, will re-open on next trigger
-          outFile.close();
+          outFile->close();
           isOpened = false;
         }
       }
@@ -258,7 +258,7 @@ namespace ChimeraTK {
       }
 
       // write data from internal buffer to data set in HDF5 file
-      H5::DataSet dataset = _storage.outFile.createDataSet(dataSetName, H5::PredType::NATIVE_FLOAT, dataSpace);
+      H5::DataSet dataset = _storage.outFile->createDataSet(dataSetName, H5::PredType::NATIVE_FLOAT, dataSpace);
       dataset.write(buffer.data(), H5::PredType::NATIVE_FLOAT);
     }
 
@@ -279,11 +279,11 @@ namespace ChimeraTK {
       // create groups
       currentGroupName = std::string("/") + std::string(timeString);
       try {
-        outFile.createGroup(currentGroupName);
-        for(auto& group : groupList) outFile.createGroup(currentGroupName + "/" + group);
+        outFile->createGroup(currentGroupName);
+        for(auto& group : groupList) outFile->createGroup(currentGroupName + "/" + group);
       }
       catch(H5::FileIException&) {
-        outFile.close();
+        outFile->close();
         isOpened = false; // will re-open file on next trigger
         return;
       }
