@@ -33,6 +33,34 @@ using namespace boost::unit_test_framework;
 /********************************************************************************************************************/
 
 /**
+ * Define a test app to test the MicroDAQModule. Here it is possible to  specify the DAQ tag used.
+ */
+struct testAppTag : public ChimeraTK::Application {
+  testAppTag(const std::string& tag = "DAQ") : Application("test"), module(this, "Dummy", "Dummy module", tag) {
+    // cleanup from previous runs
+    char temName[] = "/tmp/uDAQ.XXXXXX";
+    char* dir_name = mkdtemp(temName);
+    dir = std::string(dir_name);
+
+    // new fresh directory
+    boost::filesystem::create_directory(dir);
+
+    // add source
+    daq.addSource("/Dummy", "DAQ");
+  }
+
+  ~testAppTag() override { shutdown(); }
+
+  DummyWithTag module;
+
+  ChimeraTK::HDF5DAQ<int> daq{this, "MicroDAQ", "Test of the MicroDAQ", 10, 1000, {}, "/Dummy/outTrigger"};
+
+  std::string dir;
+};
+
+/********************************************************************************************************************/
+
+/**
  * Define a test app to test the MicroDAQModule.
  */
 template<typename UserType>
@@ -220,6 +248,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_array, T, test_types) {
 
   // remove currentBuffer and data0000.h5 to data0004.h5 and the directory uDAQ
   BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
+}
+
+/********************************************************************************************************************/
+
+BOOST_AUTO_TEST_CASE(testWrongTag) {
+  testAppTag app("WrongTag");
+  ChimeraTK::TestFacility tf(app);
+  BOOST_CHECK_THROW(tf.runApplication(), ChimeraTK::logic_error);
 }
 
 /********************************************************************************************************************/

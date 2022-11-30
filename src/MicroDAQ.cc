@@ -283,4 +283,14 @@ namespace ChimeraTK {
 
   /********************************************************************************************************************/
 
+  template<typename TRIGGERTYPE>
+  void BaseDAQ<TRIGGERTYPE>::prepare() {
+    if(!_overallVariableList.size()) {
+      throw logic_error(
+          "No variables are connected to the MicroDAQ module. Did you use the correct tag or connect a Device?");
+    }
+  }
+
+  /********************************************************************************************************************/
+
 } // namespace ChimeraTK

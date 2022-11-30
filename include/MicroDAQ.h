@@ -142,6 +142,8 @@ namespace ChimeraTK {
 
     void mainLoop() override = 0;
 
+    void prepare() override;
+
     /**
      * Visitor function for use with the ApplicationCore Model to add PVs as DAQ sources
      */

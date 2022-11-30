@@ -16,6 +16,29 @@ typedef boost::mpl::list<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, 
 
 /********************************************************************************************************************/
 
+struct DummyWithTag : public ChimeraTK::ApplicationModule {
+  DummyWithTag(ChimeraTK::ModuleGroup* module, const std::string& name, const std::string& description,
+      const std::string& tag = "DAQ")
+  : ChimeraTK::ApplicationModule(module, name, description), out(this, "out", "", "Dummy output", {tag}){};
+
+  ChimeraTK::ScalarOutput<int> out;
+  ChimeraTK::ScalarOutput<int> outTrigger{this, "outTrigger", "", "Dummy output"};
+  ChimeraTK::ScalarPushInput<int> trigger{this, "trigger", "", "Trigger", {}};
+
+  void mainLoop() override {
+    out = 0;
+    // This also writes outTrigger!
+    writeAll();
+    while(true) {
+      trigger.read();
+      out = out + 1;
+      writeAll();
+    }
+  }
+};
+
+/********************************************************************************************************************/
+
 template<typename UserType>
 struct Dummy : public ChimeraTK::ApplicationModule {
   using ChimeraTK::ApplicationModule::ApplicationModule;
