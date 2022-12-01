@@ -5,8 +5,7 @@
  *      Author: Klaus Zenker (HZDR)
  */
 
-#ifndef INCLUDE_MICRODAQHDF5_H_
-#define INCLUDE_MICRODAQHDF5_H_
+#pragma once
 
 #include <ChimeraTK/SupportedUserTypes.h>
 #include <ChimeraTK/ApplicationCore/ArrayAccessor.h>
@@ -25,6 +24,8 @@ namespace ChimeraTK {
     struct H5DataWriter;
   } // namespace detail
 
+  /********************************************************************************************************************/
+
   /**
    *  MicroDAQ module for logging data to HDF5 files. This can be usefull in
    * enviromenents where no sufficient logging of data is possible through the
@@ -40,20 +41,16 @@ namespace ChimeraTK {
      * size bigger than decimationThreshold will be decimated by decimationFactor
      * before writing to the HDF5 file.
      */
-    HDF5DAQ(EntityOwner* owner, const std::string& name, const std::string& description, uint32_t decimationFactor = 10,
-        uint32_t decimationThreshold = 1000, HierarchyModifier hierarchyModifier = HierarchyModifier::none,
-        const std::unordered_set<std::string>& tags = {}, const std::string& pathToTrigger = "trigger")
-    : BaseDAQ<TRIGGERTYPE>(owner, name, description, ".h5", decimationFactor, decimationThreshold, hierarchyModifier,
-          tags, pathToTrigger) {}
+    HDF5DAQ(ModuleGroup* owner, const std::string& name, const std::string& description, uint32_t decimationFactor = 10,
+        uint32_t decimationThreshold = 1000, const std::unordered_set<std::string>& tags = {},
+        const std::string& pathToTrigger = "trigger")
+    : BaseDAQ<TRIGGERTYPE>(
+          owner, name, description, ".h5", decimationFactor, decimationThreshold, tags, pathToTrigger) {}
 
     /** Default constructor, creates a non-working module. Can be used for late
      * initialisation. */
     HDF5DAQ() : BaseDAQ<TRIGGERTYPE>() {}
 
-    /**
-     * Overload that calls virtualiseFromCatalog.
-     */
-    //    void addSource(const DeviceModule& source, const RegisterPath& namePrefix = "");
    protected:
     void mainLoop() override;
 
@@ -62,8 +59,10 @@ namespace ChimeraTK {
     friend struct detail::H5DataWriter<TRIGGERTYPE>;
   };
 
+  /********************************************************************************************************************/
+
   DECLARE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(HDF5DAQ);
 
-} // namespace ChimeraTK
+  /********************************************************************************************************************/
 
-#endif /* INCLUDE_MICRODAQHDF5_H_ */
+} // namespace ChimeraTK

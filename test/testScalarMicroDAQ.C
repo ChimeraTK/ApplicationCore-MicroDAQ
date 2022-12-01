@@ -5,27 +5,23 @@
  *      Author: Klaus Zenker (HZDR)
  */
 
-//#define BOOST_TEST_DYN_LINK
+// #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE MicroDAQTest
 
-#include <fstream>
+#include "ChimeraTK/ApplicationCore/TestFacility.h"
+#include "Dummy.h"
+#include "MicroDAQROOT.h"
+#include "TChain.h"
 #include <type_traits>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/fusion/container/map.hpp>
 #include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
 
-#include "ChimeraTK/ApplicationCore/TestFacility.h"
-#include "ChimeraTK/ApplicationCore/ControlSystemModule.h"
-
-#include "MicroDAQROOT.h"
-#include "Dummy.h"
-
-#include "TChain.h"
-
-#include <boost/test/unit_test.hpp>
-#include <boost/fusion/container/map.hpp>
+#include <fstream>
 using namespace boost::unit_test_framework;
 
 /**
@@ -39,6 +35,9 @@ struct testApp : public ChimeraTK::Application {
     dir = std::string(dir_name);
     // new fresh directory
     boost::filesystem::create_directory(dir);
+
+    // add source
+    daq.addSource("/Dummy", "DAQ");
   }
   ~testApp() { shutdown(); }
 
@@ -46,20 +45,12 @@ struct testApp : public ChimeraTK::Application {
 
   Dummy<UserType> module{this, "Dummy", "Dummy module"};
 
-  ChimeraTK::RootDAQ<int> daq{
-      this, "MicroDAQ", "Test", 10, 1000, ChimeraTK::HierarchyModifier::none, {}, "/Dummy/outTrigger", "test"};
-
-  void defineConnections() override {
-    daq.addSource(module.findTag("DAQ"), "DAQ");
-    ChimeraTK::ControlSystemModule cs;
-    findTag(".*").connectTo(cs);
-    dumpConnections();
-  }
+  ChimeraTK::RootDAQ<int> daq{this, "MicroDAQ", "Test", 10, 1000, {}, "/Dummy/outTrigger", "test"};
 };
 
 BOOST_AUTO_TEST_CASE(test_directory_access) {
   testApp<int32_t> app;
-  ChimeraTK::TestFacility tf;
+  ChimeraTK::TestFacility tf(app);
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
   tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);
@@ -73,7 +64,7 @@ BOOST_AUTO_TEST_CASE(test_directory_access) {
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_dummy, T, test_types) {
   testApp<T> app;
-  ChimeraTK::TestFacility tf;
+  ChimeraTK::TestFacility tf(app);
   tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
   tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
   tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);
@@ -91,10 +82,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_dummy, T, test_types) {
   T* ptest = new T();
   T test;
   if constexpr(std::is_same<T, std::string>::value) {
-    ch->SetBranchAddress("DAQ.out", &ptest);
+    ch->SetBranchAddress("Dummy.out", &ptest);
   }
   else {
-    ch->SetBranchAddress("DAQ.out", &test);
+    ch->SetBranchAddress("Dummy.out", &test);
   }
   ch->GetEvent(4);
   if constexpr(std::is_same<T, bool>::value) {

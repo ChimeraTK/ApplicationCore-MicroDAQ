@@ -18,6 +18,8 @@ namespace ChimeraTK {
 
   namespace detail {
 
+    /******************************************************************************************************************/
+
     template<typename TRIGGERTYPE>
     struct ROOTstorage {
       ROOTstorage(RootDAQ<TRIGGERTYPE>* owner) : outFile(nullptr), tree(nullptr), _owner(owner) {}
@@ -66,6 +68,8 @@ namespace ChimeraTK {
        */
       std::vector<TransferElementID> _accessorsWithTrigger;
     };
+
+    /******************************************************************************************************************/
 
     template<typename TRIGGERTYPE>
     struct ROOTDataSpaceCreator {
@@ -130,6 +134,8 @@ namespace ChimeraTK {
       ROOTstorage<TRIGGERTYPE>& _storage;
     };
 
+    /******************************************************************************************************************/
+
     template<typename TRIGGERTYPE>
     struct ROOTTreeCreator {
       ROOTTreeCreator(ROOTstorage<TRIGGERTYPE>& storage, const std::string& name) : _storage(storage), _name(name) {}
@@ -159,6 +165,8 @@ namespace ChimeraTK {
       ROOTstorage<TRIGGERTYPE>& _storage;
       std::string _name;
     };
+
+    /******************************************************************************************************************/
 
     template<typename TRIGGERTYPE>
     struct ROOTDataWriter {
@@ -191,6 +199,8 @@ namespace ChimeraTK {
 
       ROOTstorage<TRIGGERTYPE>& _storage;
     };
+
+    /******************************************************************************************************************/
 
     template<typename TRIGGERTYPE>
     void ROOTstorage<TRIGGERTYPE>::processTrigger() {
@@ -260,6 +270,8 @@ namespace ChimeraTK {
 
   } // namespace detail
 
+  /********************************************************************************************************************/
+
   template<typename TRIGGERTYPE>
   void RootDAQ<TRIGGERTYPE>::mainLoop() {
     std::cout << "Initializing ROOTDAQ system..." << std::endl;
@@ -272,7 +284,7 @@ namespace ChimeraTK {
         BaseDAQ<TRIGGERTYPE>::_accessorListMap.table, detail::ROOTDataSpaceCreator<TRIGGERTYPE>(storage));
 
     // add trigger
-    storage._accessorsWithTrigger.push_back(BaseDAQ<TRIGGERTYPE>::triggerGroup.trigger.getId());
+    storage._accessorsWithTrigger.push_back(BaseDAQ<TRIGGERTYPE>::trigger.getId());
 
     // sort group list and make unique to make sure lower levels get created first
     storage.groupList.sort();
@@ -290,6 +302,10 @@ namespace ChimeraTK {
     }
   }
 
+  /********************************************************************************************************************/
+
   INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(RootDAQ);
+
+  /********************************************************************************************************************/
 
 } // namespace ChimeraTK

@@ -5,32 +5,29 @@
  *      Author: Klaus Zenker (HZDR)
  */
 
-#ifndef INCLUDE_MICRODAQ_H_
-#define INCLUDE_MICRODAQ_H_
+#pragma once
 
 #include <ChimeraTK/ApplicationCore/ApplicationModule.h>
-#include <ChimeraTK/ApplicationCore/ScalarAccessor.h>
 #include <ChimeraTK/ApplicationCore/ArrayAccessor.h>
-#include <ChimeraTK/ApplicationCore/VariableGroup.h>
-#include <ChimeraTK/ApplicationCore/ModuleGroup.h>
 #include <ChimeraTK/ApplicationCore/ConfigReader.h>
 #include <ChimeraTK/ApplicationCore/HierarchyModifyingGroup.h>
+#include <ChimeraTK/ApplicationCore/ModuleGroup.h>
+#include <ChimeraTK/ApplicationCore/ScalarAccessor.h>
+#include <ChimeraTK/ApplicationCore/VariableGroup.h>
 
 #include <boost/filesystem.hpp>
 
-#include <map>
 #include <algorithm>
 #include <cctype>
+#include <map>
 #include <string>
 
 namespace ChimeraTK {
-  namespace detail {
-    template<typename TRIGGERTYPE>
-    struct BaseDAQAccessorAttacher;
-  } // namespace detail
 
   template<typename TRIGGERTYPE>
   class BaseDAQ;
+
+  /********************************************************************************************************************/
 
   /**
    *  Envelope class providing an easy-to-use high-level application interface. Instantiate this class in your
@@ -48,30 +45,33 @@ namespace ChimeraTK {
      *  In the config file, the following variables are required:
      *  - Configuration/MicroDAQ/enable (int32): boolean flag whether the MicroDAQ system is enabled or not
      *  - Configuration/MicroDAQ/outputFormat (string): format of the output data, either "hdf5" or "root"
-     *  - Configuration/MicroDAQ/decimationFactor (uint32): decimation factor applied to large arrays (above decimationThreshold)
-     *  - Configuration/MicroDAQ/decimationThreshold (uint32): array size threshold above which the decimationFactor is applied
+     *  - Configuration/MicroDAQ/decimationFactor (uint32): decimation factor applied to large arrays (above
+     *    decimationThreshold)
+     *  - Configuration/MicroDAQ/decimationThreshold (uint32): array size threshold above which the decimationFactor is
+     *    applied
      *
      *  If Configuration/MicroDAQ/enable == 0, all other variables can be omitted.
      */
-    MicroDAQ(EntityOwner* owner, const std::string& name, const std::string& description, const std::string& inputTag,
-        const std::string& pathToTrigger, HierarchyModifier hierarchyModifier = HierarchyModifier::none,
-        const std::unordered_set<std::string>& tags = {});
-    MicroDAQ() {}
+    MicroDAQ(ModuleGroup* owner, const std::string& name, const std::string& description, const std::string& inputTag,
+        const std::string& pathToTrigger, const std::unordered_set<std::string>& tags = {});
+    MicroDAQ() = default;
 
     std::shared_ptr<BaseDAQ<TRIGGERTYPE>> getImplementation() { return impl; }
 
     /**
      * Add variable of a DeviceModule directly to the DAQ.
      * \param source The Device module to consider.
-     * \param namePrefix This prefix is used in the root file tree. It is prepended to the register names from the device.
+     * \param namePrefix This prefix is used in the root file tree. It is prepended to the register names from the
+     *        device.
      * \param submodule Use only a submodule of the device.
      */
-    void addDeviceModule(
-        const DeviceModule& source, const RegisterPath& namePrefix = "", const std::string& submodule = "");
+    void addDeviceModule(DeviceModule& source, const RegisterPath& namePrefix = "", const RegisterPath& submodule = "");
 
    protected:
     std::shared_ptr<BaseDAQ<TRIGGERTYPE>> impl;
   };
+
+  /********************************************************************************************************************/
 
   /**
    *  Base class used by the actual MicroDAQ implementations (HDF5, ROOT)
@@ -79,27 +79,76 @@ namespace ChimeraTK {
   template<typename TRIGGERTYPE>
   class BaseDAQ : public ApplicationModule {
    private:
-    std::unordered_set<std::string> _tags; ///< Tags to be added to all variables of the DAQ module.
+    // Required by public member initialisers, hence define first
+    // Tag name to tag control variables published by the MicroDAQ module itself, to exclude them from being added to
+    // the DAQ as a source.
+    const std::string _tagExcludeInternals{"_ChimeraTK_BaseDAQ_controlVars"};
+
+   public:
+    BaseDAQ(ModuleGroup* owner, const std::string& name, const std::string& description, const std::string& suffix,
+        uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000,
+        const std::unordered_set<std::string>& tags = {}, const std::string& pathToTrigger = "trigger")
+    : ApplicationModule(owner, name, description, tags), trigger(this, pathToTrigger, "", "", {_tagExcludeInternals}),
+      _decimationFactor(decimationFactor), _decimationThreshold(decimationThreshold),
+      _daqDefaultPath((boost::filesystem::current_path() / "uDAQ").string()), _suffix(suffix) {}
+
+    BaseDAQ() : _decimationFactor(0), _decimationThreshold(0) {}
 
     /**
-     * Delete file corresponding to currentBuffer from the ringbuffer.
-     */
-    void deleteRingBufferFile();
-
-    /**
-     * Check if ringbuffer file corresponding to currentBuffer exists.
+     * Check if accessor uses the DAQ trigger as external trigger.
      *
-     * Since timestamps are prefixed to the buffer files here we check
-     * the last part of the file.
-     *
-     * \return True if file with currentBuffer number exists.
+     * In that case it has to be updated as well as the trigger before reading data by the DAQ.
      */
-    bool checkFile();
+    template<typename UserType>
+    bool isAccessorUsingDAQTrigger(const ArrayPushInput<UserType>& accessor);
+
+    ScalarPushInput<TRIGGERTYPE> trigger;
+
+    ScalarPollInput<std::string> setPath{this, "directory",
+        "", "Directory where to store the DAQ data. If not set a subdirectory called uDAQ in the current directory is used.",
+        {_tagExcludeInternals}};
+
+    ScalarPollInput<ChimeraTK::Boolean> enable{this, "activate", "", "Activate the DAQ.", {_tagExcludeInternals}};
+
+    ScalarPollInput<uint32_t> nMaxFiles{this, "nMaxFiles", "",
+        "Maximum number of files in the ring buffer "
+        "(oldest file will be overwritten).",
+        {_tagExcludeInternals}};
+
+    ScalarPollInput<uint32_t> nTriggersPerFile{
+        this, "nTriggersPerFile", "", "Number of triggers stored in each file.", {_tagExcludeInternals}};
+
+    ScalarOutput<std::string> currentPath{this, "currentDirectory", "",
+        "Directory currently used for DAQ. To switch directories turn off DAQ and set new directory.",
+        {_tagExcludeInternals}};
+
+    ScalarOutput<uint32_t> currentBuffer{this, "currentBuffer", "",
+        "File number currently written to. If DAQ this shows the next buffer to be used by the DAQ.",
+        {_tagExcludeInternals}};
+
+    ScalarOutput<uint32_t> currentEntry{
+        this, "currentEntry", "", "Last entry number written. Is reset with every new file.", {_tagExcludeInternals}};
+
+    ScalarOutput<ChimeraTK::Boolean> errorStatus{
+        this, "DAQError", "", "True in case an error occurred. Reset by toggling enable.", {_tagExcludeInternals}};
 
     /**
-     * Interal function that knows if the source is a ControlsystemModul
+     * Add all PVs found below the given directory.
+     *
+     * @param qualifiedDirectoryPath qualified name of the directory
+     * @param inputTag name of the tag to select. If empty, use all PVs.
      */
-    virtual void addSource(const Module& source, const RegisterPath& namePrefix, const bool& isCSModule);
+    void addSource(const std::string& qualifiedDirectoryPath, const std::string& inputTag);
+
+    void mainLoop() override = 0;
+
+    void prepare() override;
+
+    /**
+     * Visitor function for use with the ApplicationCore Model to add PVs as DAQ sources
+     */
+    void addVariableFromModel(const ChimeraTK::Model::ProcessVariableProxy& pv, const RegisterPath& namePrefix = "",
+        const RegisterPath& submodule = "");
 
    protected:
     /** Parameters for the data decimation */
@@ -113,31 +162,25 @@ namespace ChimeraTK {
 
     std::string _prefix; ///< Current prefix path+date
 
-    /** Map of VariableGroups required to build the hierarchies. The key it the
-     * full path name. */
-    std::map<std::string, VariableGroup> _groupMap;
+    /** Overall variable name list, used to detect name collisions */
+    std::set<std::string> _overallVariableList;
 
-    /** boost::fusion::map of UserTypes to std::lists containing the names of the
-     * accessors. Technically there would be no need to use TemplateUserTypeMap
-     * for this (as type does not depend on the UserType), but since these lists
-     * must be filled consistently with the accessorListMap, the same construction
-     * is used here. */
+    /**
+     * boost::fusion::map of UserTypes to std::lists containing the names of the accessors. Technically there would be
+     * no need to use TemplateUserTypeMap for this (as type does not depend on the UserType), but since these lists must
+     * be filled consistently with the accessorListMap, the same construction is used here.
+     */
     template<typename UserType>
     using NameList = std::list<std::string>;
     TemplateUserTypeMapNoVoid<NameList> _nameListMap;
 
-    /** Overall variable name list, used to detect name collisions */
-    std::list<std::string> _overallVariableList;
-
-    /** boost::fusion::map of UserTypes to std::lists containing the
-     * ArrayPushInput accessors. These accessors are dynamically created by the
-     * AccessorAttacher. */
+    /**
+     * boost::fusion::map of UserTypes to std::lists containing the ArrayPushInput accessors. These accessors are
+     * dynamically created by the AccessorAttacher.
+     */
     template<typename UserType>
     using AccessorList = std::list<ArrayPushInput<UserType>>;
     TemplateUserTypeMapNoVoid<AccessorList> _accessorListMap;
-
-    template<typename UserType>
-    VariableNetworkNode getAccessor(const std::string& variableName);
 
     /**
      * Set the daq path.
@@ -180,85 +223,79 @@ namespace ChimeraTK {
      */
     void disableDAQ();
 
-   public:
-    BaseDAQ(EntityOwner* owner, const std::string& name, const std::string& description, const std::string& suffix,
-        uint32_t decimationFactor = 10, uint32_t decimationThreshold = 1000,
-        HierarchyModifier hierarchyModifier = HierarchyModifier::none, const std::unordered_set<std::string>& tags = {},
-        const std::string& pathToTrigger = "trigger")
-    : ApplicationModule(owner, name, description, hierarchyModifier), _tags(tags), _decimationFactor(decimationFactor),
-      _decimationThreshold(decimationThreshold), _daqDefaultPath((boost::filesystem::current_path() / "uDAQ").string()),
-      _suffix(suffix), triggerGroup(this, pathToTrigger[0] != '/' ? "./" + pathToTrigger : pathToTrigger, tags) {}
-
-    BaseDAQ() : _decimationFactor(0), _decimationThreshold(0) {}
-
-    void findTagAndAppendToModule(VirtualModule& virtualParent, const std::string& tag, bool eliminateAllHierarchies,
-        bool eliminateFirstHierarchy, bool negate, VirtualModule& root) const override;
+   private:
+    /**
+     * Delete file corresponding to currentBuffer from the ringbuffer.
+     */
+    void deleteRingBufferFile();
 
     /**
-     * Check if accessor uses the DAQ trigger as external trigger.
+     * Check if ringbuffer file corresponding to currentBuffer exists.
      *
-     * In that case it has to be updated as well as the trigger before reading
-     * data by the DAQ.
+     * Since timestamps are prefixed to the buffer files here we check
+     * the last part of the file.
+     *
+     * \return True if file with currentBuffer number exists.
      */
-    template<typename UserType>
-    bool isAccessorUsingDAQTrigger(const ArrayPushInput<UserType>& accessor) {
-      // Find out if accessor has external trigger and if it is the DAQ trigger
-      auto network = &((VariableNetworkNode)accessor).getOwner();
-      auto triggerNode = &(triggerGroup.trigger);
-      // check if network has external trigger
-      if(network->getTriggerType() == VariableNetwork::TriggerType::external) {
-        // check if external trigger is the DAQ trigger
-        if(network->getFeedingNode().getExternalTrigger() == (VariableNetworkNode)*triggerNode) {
-          return true;
-        }
-      }
-      return false;
+    bool checkFile();
+  };
+
+  /********************************************************************************************************************/
+
+  DECLARE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(BaseDAQ);
+
+  /********************************************************************************************************************/
+  /********************************************************************************************************************/
+
+  template<typename TRIGGERTYPE>
+  template<typename UserType>
+  bool BaseDAQ<TRIGGERTYPE>::isAccessorUsingDAQTrigger(const ArrayPushInput<UserType>& accessor) {
+    // Obtain the path of the trigger for the given accessor (stays empty if no trigger)
+    std::string triggerPath;
+    auto visitor = [&](const Model::DeviceModuleProxy& dev) { triggerPath = dev.getTrigger().getFullyQualifiedPath(); };
+    accessor.getModel().visit(visitor, Model::keepDeviceModules, Model::adjacentInSearch, Model::keepPvAccess);
+
+    // compare to the path of the DAQ trigger
+    return triggerPath == trigger.getModel().getFullyQualifiedPath();
+  }
+
+  /********************************************************************************************************************/
+
+  template<typename TRIGGERTYPE>
+  void BaseDAQ<TRIGGERTYPE>::addVariableFromModel(
+      const ChimeraTK::Model::ProcessVariableProxy& pv, const RegisterPath& namePrefix, const RegisterPath& submodule) {
+    // do not add control variables published by the MicroDAQ module itself
+    if(pv.getTags().count(_tagExcludeInternals) > 0) {
+      return;
     }
 
-    struct TriggerGroup : HierarchyModifyingGroup {
-      TriggerGroup(
-          EntityOwner* owner, const std::string& pathToTrigger, const std::unordered_set<std::string>& tags = {})
-      : HierarchyModifyingGroup(owner, HierarchyModifyingGroup::getPathName(pathToTrigger), "", tags),
-        trigger{this, HierarchyModifyingGroup::getUnqualifiedName(pathToTrigger), "", "Trigger input"} {}
+    // gather information about the PV
+    auto name = pv.getFullyQualifiedPath();
+    const auto& type = pv.getNodes().front().getValueType(); // All node types must be equal for a PV
+    auto length = pv.getNodes().front().getNumberOfElements();
 
-      TriggerGroup() {}
+    // check if qualified path name patches the given submodule name
+    if(submodule != "/" && !boost::starts_with(name, std::string(submodule) + "/")) {
+      return;
+    }
 
-      ScalarPushInput<TRIGGERTYPE> trigger;
-    } triggerGroup;
+    // generate name as visible in the DAQ
+    std::string daqName = namePrefix / name.substr(submodule.length());
 
-    ScalarPollInput<std::string> setPath{this, "directory",
-        "", "Directory where to store the DAQ data. If not set a subdirectory called uDAQ in the current directory is used.",
-        _tags};
+    // check for name collision
+    if(_overallVariableList.count(daqName) > 0) {
+      throw ChimeraTK::logic_error("MicroDAQ: DAQ name '" + daqName + "' already taken when adding PV '" + name + "'.");
+    }
+    _overallVariableList.insert(daqName);
 
-    ScalarPollInput<ChimeraTK::Boolean> enable{this, "activate", "", "Activate the DAQ.", _tags};
+    // create accessor and fill lists
+    callForTypeNoVoid(type, [&](auto t) {
+      using UserType = decltype(t);
+      boost::fusion::at_key<UserType>(_nameListMap.table).push_back(daqName);
+      boost::fusion::at_key<UserType>(_accessorListMap.table).emplace_back(this, name, "", length, "");
+    });
+  }
 
-    ScalarPollInput<uint32_t> nMaxFiles{this, "nMaxFiles", "",
-        "Maximum number of files in the ring buffer "
-        "(oldest file will be overwritten).",
-        _tags};
+  /********************************************************************************************************************/
 
-    ScalarPollInput<uint32_t> nTriggersPerFile{
-        this, "nTriggersPerFile", "", "Number of triggers stored in each file.", _tags};
-
-    ScalarOutput<std::string> currentPath{this, "currentDirectory", "",
-        "Directory currently used for DAQ. To switch directories turn off DAQ and set new directory.", _tags};
-
-    ScalarOutput<uint32_t> currentBuffer{this, "currentBuffer", "",
-        "File number currently written to. If DAQ this shows the next buffer to be used by the DAQ.", _tags};
-
-    ScalarOutput<uint32_t> currentEntry{
-        this, "currentEntry", "", "Last entry number written. Is reset with every new file.", _tags};
-
-    ScalarOutput<ChimeraTK::Boolean> errorStatus{
-        this, "DAQError", "", "True in case an error occurred. Reset by toggling enable.", _tags};
-
-    virtual void addSource(const Module& source, const RegisterPath& namePrefix = "");
-
-    virtual void mainLoop() override = 0;
-
-    friend struct detail::BaseDAQAccessorAttacher<TRIGGERTYPE>;
-  };
-  DECLARE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(BaseDAQ);
 } // namespace ChimeraTK
-
-#endif /* INCLUDE_MICRODAQ_H_ */

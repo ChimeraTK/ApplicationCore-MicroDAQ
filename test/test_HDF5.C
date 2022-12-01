@@ -5,28 +5,24 @@
  *      Author: zenker
  */
 
-//#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE MicroDAQTestHDF5
 
-#include <boost/filesystem.hpp>
-#include <boost/mpl/list.hpp>
-#include <boost/format.hpp>
-
-#include <string>
-#include <vector>
-#include "hdf5.h"
-#include <stdlib.h>
-#include <chrono>
-#include <thread>
-
+#include "Dummy.h"
 #include "H5Cpp.h"
-
-#include "ChimeraTK/ApplicationCore/TestFacility.h"
-#include "ChimeraTK/ApplicationCore/ControlSystemModule.h"
-
+#include "hdf5.h"
 #include "MicroDAQHDF5.h"
 
-#include "Dummy.h"
+#include <ChimeraTK/ApplicationCore/TestFacility.h>
+
+#include <boost/filesystem.hpp>
+#include <boost/format.hpp>
+#include <boost/mpl/list.hpp>
+
+#include <chrono>
+#include <cstdlib>
+#include <string>
+#include <thread>
+#include <vector>
 
 // this include must come last
 #define BOOST_NO_EXCEPTIONS
@@ -34,50 +30,85 @@
 using namespace boost::unit_test_framework;
 #undef BOOST_NO_EXCEPTIONS
 
+/********************************************************************************************************************/
+
+/**
+ * Define a test app to test the MicroDAQModule. Here it is possible to  specify the DAQ tag used.
+ */
+struct testAppTag : public ChimeraTK::Application {
+  testAppTag(const std::string& tag = "DAQ") : Application("test"), module(this, "Dummy", "Dummy module", tag) {
+    // cleanup from previous runs
+    char temName[] = "/tmp/uDAQ.XXXXXX";
+    char* dir_name = mkdtemp(temName);
+    dir = std::string(dir_name);
+
+    // new fresh directory
+    boost::filesystem::create_directory(dir);
+
+    // add source
+    daq.addSource("/Dummy", "DAQ");
+  }
+
+  ~testAppTag() override { shutdown(); }
+
+  DummyWithTag module;
+
+  ChimeraTK::HDF5DAQ<int> daq{this, "MicroDAQ", "Test of the MicroDAQ", 10, 1000, {}, "/Dummy/outTrigger"};
+
+  std::string dir;
+};
+
+/********************************************************************************************************************/
+
 /**
  * Define a test app to test the MicroDAQModule.
  */
 template<typename UserType>
 struct testApp : public ChimeraTK::Application {
-  testApp() : Application("test") { // cleanup
+  testApp() : Application("test") {
+    // cleanup from previous runs
     char temName[] = "/tmp/uDAQ.XXXXXX";
     char* dir_name = mkdtemp(temName);
     dir = std::string(dir_name);
+
     // new fresh directory
     boost::filesystem::create_directory(dir);
+
+    // add source
+    daq.addSource("/Dummy", "DAQ");
   }
-  ~testApp() { shutdown(); }
+
+  ~testApp() override { shutdown(); }
 
   Dummy<UserType> module{this, "Dummy", "Dummy module"};
 
-  ChimeraTK::HDF5DAQ<int> daq{
-      this, "MicroDAQ", "Test of the MicroDAQ", 10, 1000, ChimeraTK::HierarchyModifier::none, {}, "/Dummy/outTrigger"};
+  ChimeraTK::HDF5DAQ<int> daq{this, "MicroDAQ", "Test of the MicroDAQ", 10, 1000, {}, "/Dummy/outTrigger"};
 
   std::string dir;
-
-  void defineConnections() override {
-    daq.addSource(module.findTag("DAQ"), "DAQ");
-    ChimeraTK::ControlSystemModule cs;
-    findTag(".*").connectTo(cs);
-
-    dumpConnections();
-  }
 };
+
+/********************************************************************************************************************/
 
 /**
  * Define a test app to test the MicroDAQModule.
  */
 template<typename UserType>
 struct testAppArray : public ChimeraTK::Application {
-  testAppArray(uint32_t decimation = 10, uint32_t decimationThreshold = 1000)
+  explicit testAppArray(uint32_t decimation = 10, uint32_t decimationThreshold = 1000)
   : Application("test"), _decimation(decimation), _decimationThreshold(decimationThreshold) {
+    // cleanup from previous runs
     char temName[] = "/tmp/uDAQ.XXXXXX";
     char* dir_name = mkdtemp(temName);
     dir = std::string(dir_name);
+
     // new fresh directory
     boost::filesystem::create_directory(dir);
+
+    // add source
+    daq.addSource("/Dummy", "DAQ");
   }
-  ~testAppArray() { shutdown(); }
+
+  ~testAppArray() override { shutdown(); }
 
   const uint32_t _decimation;
   const uint32_t _decimationThreshold;
@@ -86,28 +117,28 @@ struct testAppArray : public ChimeraTK::Application {
 
   std::string dir;
 
-  ChimeraTK::HDF5DAQ<int> daq{this, "MicroDAQ", "Test of the MicroDAQ", _decimation, _decimationThreshold,
-      ChimeraTK::HierarchyModifier::none, {}, "/Dummy/outTrigger"};
-  //  ChimeraTK::MicroDAQ<int> daq{this,"MicroDAQ","Test", 10, 1000};
-
-  void defineConnections() override {
-    daq.addSource(module.findTag("DAQ"), "DAQ");
-    ChimeraTK::ControlSystemModule cs;
-    findTag(".*").connectTo(cs);
-    dumpConnections();
-  }
+  ChimeraTK::HDF5DAQ<int> daq{
+      this, "MicroDAQ", "Test of the MicroDAQ", _decimation, _decimationThreshold, {}, "/Dummy/outTrigger"};
 };
+
+/********************************************************************************************************************/
 
 #ifndef H5_NO_NAMESPACE
 using namespace H5;
 #endif
 
+/********************************************************************************************************************/
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_scalar, T, test_types) {
+  std::cout << "test_scalar<" << typeid(T).name() << ">" << std::endl;
+
   testApp<T> app;
-  ChimeraTK::TestFacility tf;
-  tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
-  tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
-  tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);
+  ChimeraTK::TestFacility tf(app);
+
+  tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", uint32_t(2));
+  tf.setScalarDefault("/MicroDAQ/nMaxFiles", uint32_t(5));
+  tf.setScalarDefault("/MicroDAQ/activate", ChimeraTK::Boolean(true));
+
   tf.setScalarDefault("/MicroDAQ/directory", app.dir);
   tf.runApplication();
 
@@ -137,7 +168,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_scalar, T, test_types) {
   H5File h5file(file.string().c_str(), H5F_ACC_RDONLY);
   Group gr = h5file.openGroup("/");
   auto event = gr.openGroup(gr.getObjnameByIdx(0).c_str());
-  auto dataGroup = event.openGroup("DAQ");
+  auto dataGroup = event.openGroup("Dummy");
   DataSet dataset = dataGroup.openDataSet("out");
   DataSpace filespace = dataset.getSpace();
   hsize_t dims[1]; // dataset dimensions
@@ -156,12 +187,18 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_scalar, T, test_types) {
   BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
 }
 
+/********************************************************************************************************************/
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_array, T, test_types) {
+  std::cout << "test_array<" << typeid(T).name() << ">" << std::endl;
+
   testAppArray<T> app;
-  ChimeraTK::TestFacility tf;
-  tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
-  tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
-  tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);
+  ChimeraTK::TestFacility tf(app);
+
+  tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", uint32_t(2));
+  tf.setScalarDefault("/MicroDAQ/nMaxFiles", uint32_t(5));
+  tf.setScalarDefault("/MicroDAQ/activate", ChimeraTK::Boolean(true));
+
   tf.setScalarDefault("/MicroDAQ/directory", app.dir);
   tf.runApplication();
 
@@ -190,7 +227,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_array, T, test_types) {
   H5File h5file(file.string().c_str(), H5F_ACC_RDONLY);
   Group gr = h5file.openGroup("/");
   auto event = gr.openGroup(gr.getObjnameByIdx(0).c_str());
-  auto dataGroup = event.openGroup("DAQ");
+  auto dataGroup = event.openGroup("Dummy");
   DataSet dataset = dataGroup.openDataSet("out");
   DataSpace filespace = dataset.getSpace();
   hsize_t dims[1]; // dataset dimensions
@@ -212,3 +249,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_array, T, test_types) {
   // remove currentBuffer and data0000.h5 to data0004.h5 and the directory uDAQ
   BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
 }
+
+/********************************************************************************************************************/
+
+BOOST_AUTO_TEST_CASE(testWrongTag) {
+  testAppTag app("WrongTag");
+  ChimeraTK::TestFacility tf(app);
+  BOOST_CHECK_THROW(tf.runApplication(), ChimeraTK::logic_error);
+}
+
+/********************************************************************************************************************/

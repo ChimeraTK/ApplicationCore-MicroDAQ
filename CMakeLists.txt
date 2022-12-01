@@ -10,9 +10,9 @@ option(BUILD_TESTS "Build tests" ON)
 
 #______________________________________________________________________________
 #                                                                       VERSION
-set(${PROJECT_NAME}_MAJOR_VERSION 02)
+set(${PROJECT_NAME}_MAJOR_VERSION 03)
 set(${PROJECT_NAME}_MINOR_VERSION 00)
-set(${PROJECT_NAME}_PATCH_VERSION 01)
+set(${PROJECT_NAME}_PATCH_VERSION 00)
 include(${CMAKE_SOURCE_DIR}/cmake/set_version_numbers.cmake)
 
 include(${CMAKE_SOURCE_DIR}/cmake/set_default_flags.cmake)
@@ -22,7 +22,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/set_default_build_to_release.cmake)
 #______________________________________________________________________________
 #                                                                  Dependencies
 include(cmake/add_dependency.cmake)
-add_dependency(ChimeraTK-ApplicationCore 02.09 REQUIRED)
+add_dependency(ChimeraTK-ApplicationCore 03.00 REQUIRED)
+add_dependency(Boost COMPONENTS date_time REQUIRED)
 
 IF(ENABLE_HDF5)
   FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C CXX HL)
@@ -89,17 +90,18 @@ IF(ENABLE_ROOT)
         PRIVATE ${HDF5_HL_LIBRARIES}
                 ${HDF5_CXX_LIBRARIES}
                 ROOT::Tree
+                ${Boost_LIBRARIES}
     )
 ELSE()
     target_link_libraries(${PROJECT_NAME}
         PUBLIC ${ChimeraTK-ApplicationCore_LIBRARIES}
         PRIVATE ${HDF5_HL_LIBRARIES}
                 ${HDF5_CXX_LIBRARIES}
+                ${Boost_LIBRARIES}
     )
 ENDIF()
   
-
-find_package(Boost COMPONENTS unit_test_framework)                            
+find_package(Boost COMPONENTS unit_test_framework)
 if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
   enable_testing()
   FILE(COPY ${CMAKE_SOURCE_DIR}/test/dummy.dmap
