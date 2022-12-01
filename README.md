@@ -1,6 +1,6 @@
 # ApplicationCore-MicroDAQ
 
-The ApplicationCore-MicroDAQ package provides ApplicationCore modules for data aquisition.
+The ApplicationCore-MicroDAQ package provides ApplicationCore modules for data acquisition.
 It includes an abstract base class `ChimeraTK::BaseDAQ`, that can be used to implement different DAQ backends.
 Currently two DAQ backends are implemented:
 
@@ -24,23 +24,19 @@ In the config file, the following variables are required:
 
 If `MicroDAQ/enable == 0`, all other variables can be omitted.
 
-In order to use the envelope class the `MicroDAQ` class needs to be defined after the `ChimeraTK::ConfigReader` in the server application. The `MicroDAQ` consturctor takes an `inputTag`, which is used to identify
-variables of other modules that should be connected to the DAQ module. The `tags` passed in constructor of `MicroDAQ` will be added to all process variables of the 
-daq. If you add e.g. `"CS"` you can connect all process variables of the daq to the control system by using a universal method call: 
-
-      findTag("CS").connectTo(cs);
-      
-
+In order to use the envelope class the `MicroDAQ` class needs to be defined after the `ChimeraTK::ConfigReader` in the server application. The `MicroDAQ` constructor takes an `inputTag`, which is used to identify
+variables of other modules that should be connected to the DAQ module. The `tags` passed in the constructor of `MicroDAQ` will be added to all process variables of the 
+daq. 
 
 ## Remark on DeviceModules
 
-It is possible to connect DeviceModules to the DAQ. This requires to connect them to the ControlSystem fist and after connect the corresponing control system part to the 
-daq using the `addSource` method. That is currently not possible using the envelope class, because it requires a certain tag to identify the daq variables and currently 
+It is possible to connect DeviceModules to the DAQ. This can be done by calling `addDeviceModule` in the constructor of your application. 
+It is currently not possible to connect variables of device modules automatically to the DAQ module, because it requires a certain tag to identify the daq variables and currently 
 it is not possible to add tags to the DeviceModule. 
 
 ## Remark on data types
 
-The data stored in the *.h5 files if always of tpye `float`. In case of the ROOT backend the ChimerTK data types are properly mapped to ROOT data types, which further reduces the file size and improoves analysis performance.
+The data stored in the *.h5 files is always of type `float`. In case of the ROOT backend the ChimerTK data types are properly mapped to ROOT data types, which further reduces the file size and improves analysis performance.
 
 ## Remark on ROOT dictionary
 
