@@ -16,6 +16,7 @@
 #include <fstream>
 #include <iostream>
 #include <string.h>
+#include <vector>
 
 #ifdef ENABLE_HDF5
 #  include "MicroDAQHDF5.h"
@@ -87,16 +88,21 @@ namespace ChimeraTK {
     auto neighbourDir = model.visit(ChimeraTK::Model::returnDirectory, ChimeraTK::Model::getNeighbourDirectory,
         ChimeraTK::Model::returnFirstHit(ChimeraTK::Model::DirectoryProxy{}));
 
+    std::vector<ChimeraTK::Model::ProcessVariableProxy> pvs;
     auto found = neighbourDir.visitByPath(qualifiedDirectoryPath, [&](auto sourceDir) {
       if(inputTag.empty()) {
-        sourceDir.visit([&](auto pv) { addVariableFromModel(pv); }, ChimeraTK::Model::breadthFirstSearch,
+        sourceDir.visit([&](auto pv) { pvs.emplace_back(pv); }, ChimeraTK::Model::breadthFirstSearch,
             ChimeraTK::Model::keepProcessVariables);
       }
       else {
-        sourceDir.visit([&](auto pv) { addVariableFromModel(pv); }, ChimeraTK::Model::breadthFirstSearch,
+        sourceDir.visit([&](auto pv) { pvs.emplace_back(pv); }, ChimeraTK::Model::breadthFirstSearch,
             ChimeraTK::Model::keepProcessVariables && ChimeraTK::Model::keepTag(inputTag));
       }
     });
+
+    for(auto pv : pvs) {
+      addVariableFromModel(pv);
+    }
 
     if(!found) {
       throw ChimeraTK::logic_error("Path passed to BaseDAQ<TRIGGERTYPE>::addSource() not found!");
