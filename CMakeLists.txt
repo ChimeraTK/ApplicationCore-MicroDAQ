@@ -1,5 +1,5 @@
 PROJECT(ChimeraTK-ApplicationCore-MicroDAQ)
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.16)
 
 #______________________________________________________________________________
 #                                                                       OPTIONS
@@ -12,18 +12,17 @@ option(BUILD_TESTS "Build tests" ON)
 #                                                                       VERSION
 set(${PROJECT_NAME}_MAJOR_VERSION 03)
 set(${PROJECT_NAME}_MINOR_VERSION 00)
-set(${PROJECT_NAME}_PATCH_VERSION 01)
+set(${PROJECT_NAME}_PATCH_VERSION 02)
 include(${CMAKE_SOURCE_DIR}/cmake/set_version_numbers.cmake)
-
 include(${CMAKE_SOURCE_DIR}/cmake/set_default_flags.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/set_default_build_to_release.cmake)
 
 
 #______________________________________________________________________________
 #                                                                  Dependencies
-include(cmake/add_dependency.cmake)
-add_dependency(ChimeraTK-ApplicationCore 03.00 REQUIRED)
-add_dependency(Boost COMPONENTS date_time REQUIRED)
+find_package(ChimeraTK-ApplicationCore 03.00 REQUIRED)
+include_directories(SYSTEM ${ChimeraTK-ApplicationCore_INCLUDE_DIRS})
+find_package(Boost COMPONENTS date_time REQUIRED)
 
 IF(ENABLE_HDF5)
   FIND_PACKAGE(HDF5 REQUIRED COMPONENTS C CXX HL)
@@ -61,7 +60,7 @@ ENDIF(ENABLE_ROOT)
 #                                                                  Build target
 
 set(source_MicroDAQ src/MicroDAQ.cc)
-SET(daq_header include/MicroDAQ.h)
+set(daq_header include/MicroDAQ.h)
 
 IF(ENABLE_HDF5)
   # Append MicroDAQ based on HDF5
@@ -83,10 +82,12 @@ set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${daq_header}")
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_FULL_LIBRARY_VERSION}
                                                  SOVERSION ${${PROJECT_NAME}_SOVERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+# exported includes are all under ${CMAKE_INSTALL_PREFIX}/include
+target_include_directories(${PROJECT_NAME} INTERFACE "$<INSTALL_INTERFACE:include>")
 
 IF(ENABLE_ROOT)
     target_link_libraries(${PROJECT_NAME}
-        PUBLIC ${ChimeraTK-ApplicationCore_LIBRARIES}
+        PUBLIC ChimeraTK::ChimeraTK-ApplicationCore
         PRIVATE ${HDF5_HL_LIBRARIES}
                 ${HDF5_CXX_LIBRARIES}
                 ROOT::Tree
@@ -94,7 +95,7 @@ IF(ENABLE_ROOT)
     )
 ELSE()
     target_link_libraries(${PROJECT_NAME}
-        PUBLIC ${ChimeraTK-ApplicationCore_LIBRARIES}
+        PUBLIC ChimeraTK::ChimeraTK-ApplicationCore
         PRIVATE ${HDF5_HL_LIBRARIES}
                 ${HDF5_CXX_LIBRARIES}
                 ${Boost_LIBRARIES}
@@ -113,37 +114,27 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
   if(ENABLE_HDF5)
     add_executable(test_HDF5 test/test_HDF5.C ${test_headers})
     target_link_libraries(test_HDF5 ${PROJECT_NAME} ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES})
-    set_target_properties(test_HDF5 PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
-                                               LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
     add_test(test_HDF5 test_HDF5)
     
     FILE(COPY ${CMAKE_SOURCE_DIR}/test/device_test_HDF5.xml DESTINATION ${PROJECT_BINARY_DIR})
     add_executable(test_Device_HDF5 test/testDevice_HDF5.C ${test_headers})
-    target_link_libraries(test_Device_HDF5 ${PROJECT_NAME} ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${ChimeraTK-ApplicationCore_LIBRARIES})
-    set_target_properties(test_Device_HDF5 PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
-                                                    LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
+    target_link_libraries(test_Device_HDF5 ${PROJECT_NAME} ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ChimeraTK::ChimeraTK-ApplicationCore)
     add_test( test_Device_HDF5 test_Device_HDF5)     
   endif(ENABLE_HDF5)
   
   if(ENABLE_ROOT)
     add_executable(test_ScalarMicroDAQ test/testScalarMicroDAQ.C ${test_headers})
     target_link_libraries(test_ScalarMicroDAQ ${PROJECT_NAME} ROOT::Tree)
-    set_target_properties(test_ScalarMicroDAQ PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
-                                                         LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
     add_test( test_ScalarMicroDAQ test_ScalarMicroDAQ)                         
                               
     add_executable(test_ArrayMicroDAQ test/testArrayMicroDAQ.C ${test_headers})
-    target_link_libraries(test_ArrayMicroDAQ ${PROJECT_NAME} ROOT::Tree ${ChimeraTK-ApplicationCore_LIBRARIES})
-    set_target_properties(test_ArrayMicroDAQ PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
-                                                        LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
+    target_link_libraries(test_ArrayMicroDAQ ${PROJECT_NAME} ROOT::Tree ChimeraTK::ChimeraTK-ApplicationCore)
     add_test( test_ArrayMicroDAQ test_ArrayMicroDAQ)                             
 
     FILE(COPY ${CMAKE_SOURCE_DIR}/test/device_test_ROOT.xml DESTINATION ${PROJECT_BINARY_DIR})
 
     add_executable(test_Device_ROOT test/testDevice_ROOT.C ${test_headers})
-    target_link_libraries(test_Device_ROOT ${PROJECT_NAME} ROOT::Tree ${ChimeraTK-ApplicationCore_LIBRARIES})
-    set_target_properties(test_Device_ROOT PROPERTIES COMPILE_FLAGS "${ChimeraTK-ApplicationCore_CXX_FLAGS}"
-                                                    LINK_FLAGS "${ChimeraTK-ApplicationCore_LINKER_FLAGS}")
+    target_link_libraries(test_Device_ROOT ${PROJECT_NAME} ROOT::Tree ChimeraTK::ChimeraTK-ApplicationCore)
     add_test( test_Device_ROOT test_Device_ROOT)                             
 
 
@@ -161,11 +152,14 @@ if(ENABLE_ROOT)
                       WORLD_READ)
 endif(ENABLE_ROOT)         
 
+# Install the library and the executables
+# this defines architecture-dependent ${CMAKE_INSTALL_LIBDIR}
+include(GNUInstallDirs)
 INSTALL(TARGETS  ${PROJECT_NAME}
-        EXPORT ${PROJECT_NAME}LibraryDepends 
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        EXPORT ${PROJECT_NAME}Targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION  ${CMAKE_INSTALL_PREFIX}/include/ChimeraTK/ApplicationCore
-        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
                     GROUP_READ GROUP_EXECUTE
                     WORLD_READ WORLD_EXECUTE)
@@ -181,5 +175,7 @@ list(APPEND ${PROJECT_NAME}_PUBLIC_DEPENDENCIES "Boost COMPONENTS system thread 
 if(ENABLE_ROOT)
   list(APPEND ${PROJECT_NAME}_PUBLIC_DEPENDENCIES "ROOT COMPONENTS Core Tree Gui")
 endif(ENABLE_ROOT)
+# we support our cmake EXPORTS as imported targets
+set(PROVIDES_EXPORTED_TARGETS 1)
 include(${CMAKE_SOURCE_DIR}/cmake/create_cmake_config_files.cmake)        
         
