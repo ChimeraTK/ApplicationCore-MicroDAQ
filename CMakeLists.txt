@@ -21,6 +21,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/set_default_build_to_release.cmake)
 #______________________________________________________________________________
 #                                                                  Dependencies
 find_package(ChimeraTK-ApplicationCore 03.00 REQUIRED)
+# extract ApplicationCore include dir from the chimeraTK target - it is needed to build the ROOT dictionary
+get_target_property(ChimeraTK-ApplicationCore_INCLUDE_DIRS ChimeraTK::ChimeraTK-ApplicationCore INTERFACE_INCLUDE_DIRECTORIES)
 include_directories(SYSTEM ${ChimeraTK-ApplicationCore_INCLUDE_DIRS})
 find_package(Boost COMPONENTS date_time REQUIRED)
 
