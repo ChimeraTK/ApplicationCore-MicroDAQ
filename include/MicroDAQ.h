@@ -284,7 +284,8 @@ namespace ChimeraTK {
 
     // check for name collision
     if(_overallVariableList.count(daqName) > 0) {
-      throw ChimeraTK::logic_error("MicroDAQ: DAQ name '" + daqName + "' already taken when adding PV '" + name + "'.");
+      // Can happen if a pv is added in the logical name mapping process twice, e.g. to use math plugin
+      return;
     }
     _overallVariableList.insert(daqName);
 
