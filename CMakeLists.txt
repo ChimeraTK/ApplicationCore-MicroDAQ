@@ -12,7 +12,7 @@ option(BUILD_TESTS "Build tests" ON)
 #                                                                       VERSION
 set(${PROJECT_NAME}_MAJOR_VERSION 03)
 set(${PROJECT_NAME}_MINOR_VERSION 01)
-set(${PROJECT_NAME}_PATCH_VERSION 00)
+set(${PROJECT_NAME}_PATCH_VERSION 01)
 include(${CMAKE_SOURCE_DIR}/cmake/set_version_numbers.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/set_default_flags.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/set_default_build_to_release.cmake)
@@ -148,7 +148,7 @@ endif(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
 
 if(ENABLE_ROOT)
   INSTALL(FILES ${PROJECT_BINARY_DIR}/lib${ROOTDICTDAQ}_rdict.pcm
-          DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/
+          DESTINATION ${CMAKE_INSTALL_LIBDIR}
           PERMISSIONS OWNER_READ OWNER_WRITE
                       GROUP_READ
                       WORLD_READ)
