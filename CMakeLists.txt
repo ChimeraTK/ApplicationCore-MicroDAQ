@@ -146,6 +146,9 @@ else()
   message(STATUS "Boost test framework not found. No boost based tests will be build.")
 endif(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
 
+# Install the library and the executables
+# this defines architecture-dependent ${CMAKE_INSTALL_LIBDIR}
+include(GNUInstallDirs)
 if(ENABLE_ROOT)
   INSTALL(FILES ${PROJECT_BINARY_DIR}/lib${ROOTDICTDAQ}_rdict.pcm
           DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -154,9 +157,6 @@ if(ENABLE_ROOT)
                       WORLD_READ)
 endif(ENABLE_ROOT)         
 
-# Install the library and the executables
-# this defines architecture-dependent ${CMAKE_INSTALL_LIBDIR}
-include(GNUInstallDirs)
 INSTALL(TARGETS  ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}Targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
