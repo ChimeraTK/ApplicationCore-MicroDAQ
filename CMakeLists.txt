@@ -12,7 +12,7 @@ option(BUILD_TESTS "Build tests" ON)
 #                                                                       VERSION
 set(${PROJECT_NAME}_MAJOR_VERSION 03)
 set(${PROJECT_NAME}_MINOR_VERSION 01)
-set(${PROJECT_NAME}_PATCH_VERSION 01)
+set(${PROJECT_NAME}_PATCH_VERSION 02)
 include(${CMAKE_SOURCE_DIR}/cmake/set_version_numbers.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/set_default_flags.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/set_default_build_to_release.cmake)
@@ -146,6 +146,9 @@ else()
   message(STATUS "Boost test framework not found. No boost based tests will be build.")
 endif(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
 
+# Install the library and the executables
+# this defines architecture-dependent ${CMAKE_INSTALL_LIBDIR}
+include(GNUInstallDirs)
 if(ENABLE_ROOT)
   INSTALL(FILES ${PROJECT_BINARY_DIR}/lib${ROOTDICTDAQ}_rdict.pcm
           DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -154,9 +157,6 @@ if(ENABLE_ROOT)
                       WORLD_READ)
 endif(ENABLE_ROOT)         
 
-# Install the library and the executables
-# this defines architecture-dependent ${CMAKE_INSTALL_LIBDIR}
-include(GNUInstallDirs)
 INSTALL(TARGETS  ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}Targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
