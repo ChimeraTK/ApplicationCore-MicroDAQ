@@ -2,7 +2,7 @@
  * test_HDF5.C
  *
  *  Created on: Oct 17, 2017
- *      Author: zenker
+ *      Author: Klaus Zenker (HZDR)
  */
 
 #define BOOST_TEST_MODULE MicroDAQTestHDF5
