@@ -63,6 +63,32 @@ BOOST_AUTO_TEST_CASE(test_directory_access) {
   BOOST_CHECK_EQUAL(tf.readScalar<ChimeraTK::Boolean>("/MicroDAQ/status/DAQError"), 1);
 }
 
+BOOST_AUTO_TEST_CASE(test_diagnostics) {
+  testApp<int32_t> app;
+  ChimeraTK::TestFacility tf(app);
+  tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", (uint32_t)2);
+  tf.setScalarDefault("/MicroDAQ/nMaxFiles", (uint32_t)5);
+  tf.setScalarDefault("/MicroDAQ/activate", (ChimeraTK::Boolean)1);
+  tf.setScalarDefault("/MicroDAQ/directory", app.dir);
+  tf.runApplication();
+  for(size_t i = 0; i < 9; i++) {
+    tf.writeScalar("/Dummy/trigger", (int)(i * 2));
+    tf.stepApplication();
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+  }
+  TChain* ch = new TChain("test");
+  ch->Add((app.dir + "/*.root").c_str());
+  BOOST_CHECK_NE(0, ch->GetEntries());
+  Int_t missedTriggers;
+  Long64_t triggerPeriod;
+  ch->SetBranchAddress("MicroDAQ.nMissedTriggers", &missedTriggers);
+  ch->SetBranchAddress("MicroDAQ.triggerPeriod", &triggerPeriod);
+  ch->GetEvent(4);
+  BOOST_CHECK_EQUAL(missedTriggers, 1);
+  // should be at least 200ms
+  BOOST_CHECK_GE(triggerPeriod, 199);
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_dummy, T, test_types) {
   testApp<T> app;
   ChimeraTK::TestFacility tf(app);

@@ -59,10 +59,9 @@ BOOST_AUTO_TEST_CASE(test_directory_access) {
   tf.writeScalar("/Dummy/trigger", (int)0);
   tf.stepApplication();
   std::this_thread::sleep_for(std::chrono::milliseconds(200));
-  tf.writeScalar("/Dummy/trigger", (int)0);
+  tf.writeScalar("/Dummy/trigger", (int)2);
   tf.stepApplication();
-  std::this_thread::sleep_for(std::chrono::milliseconds(200));
-  tf.writeScalar("/Dummy/trigger", (int)0);
-  tf.stepApplication();
-  BOOST_CHECK_EQUAL(tf.getScalar<int64_t>("/MicroDAQ/status/triggerPeriod"), 20);
+  BOOST_CHECK_EQUAL(tf.readScalar<int32_t>("/MicroDAQ/status/nMissedTriggers"), 1);
+  // should be at least 200ms
+  BOOST_CHECK_GE(tf.readScalar<int64_t>("/MicroDAQ/status/triggerPeriod"), 199);
 }

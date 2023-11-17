@@ -20,7 +20,7 @@ namespace ChimeraTK {
       H5storage(HDF5DAQ<TRIGGERTYPE>* owner) : _owner(owner) {
         // prepare internal data
         hsize_t dimsf[1] = {1}; // dataset dimensions
-        _space["MicroDAQ.missedTriggers"] = H5::DataSpace(1, dimsf);
+        _space["MicroDAQ.nMissedTriggers"] = H5::DataSpace(1, dimsf);
         _space["MicroDAQ.triggerPeriod"] = H5::DataSpace(1, dimsf);
       }
 
@@ -292,7 +292,7 @@ namespace ChimeraTK {
       try {
         outFile->createGroup(currentGroupName);
         for(auto& group : groupList) outFile->createGroup(currentGroupName + "/" + group);
-        outFile->createGroup(currentGroupName + "/MicroDaq");
+        outFile->createGroup(currentGroupName + "/MicroDAQ");
       }
       catch(H5::FileIException&) {
         outFile->close();
@@ -308,11 +308,11 @@ namespace ChimeraTK {
       // working for Boolean - Why?
       TRIGGERTYPE tmpData = _owner->BaseDAQ<TRIGGERTYPE>::status.nMissedTriggers;
       _buffer[0] = userTypeToNumeric<float>(tmpData);
-      H5::DataSet dataset{outFile->createDataSet(currentGroupName + "/MicroDaq/missedTriggers",
-          H5::PredType::NATIVE_FLOAT, _space["MicroDAQ.missedTriggers"])};
+      H5::DataSet dataset{outFile->createDataSet(currentGroupName + "/MicroDAQ/nMissedTriggers",
+          H5::PredType::NATIVE_FLOAT, _space["MicroDAQ.nMissedTriggers"])};
       dataset.write(_buffer.data(), H5::PredType::NATIVE_FLOAT);
       H5::DataSet dataset1{outFile->createDataSet(
-          currentGroupName + "/MicroDaq/triggerPeriod", H5::PredType::NATIVE_FLOAT, _space["MicroDAQ.triggerPeriod"])};
+          currentGroupName + "/MicroDAQ/triggerPeriod", H5::PredType::NATIVE_FLOAT, _space["MicroDAQ.triggerPeriod"])};
       _buffer[0] = userTypeToNumeric<float>((int64_t)_owner->BaseDAQ<TRIGGERTYPE>::status.triggerPeriod);
       dataset1.write(_buffer.data(), H5::PredType::NATIVE_FLOAT);
     }

@@ -238,7 +238,7 @@ namespace ChimeraTK {
         if(!tree) {
           boost::fusion::for_each(treeDataMap.table, ROOTTreeCreator<TRIGGERTYPE>(*this, _owner->_treeName));
           tree->Branch("MicroDAQ.triggerPeriod", &triggerPeriod);
-          tree->Branch("MicroDAQ.NMissedTriggers", &missedTrigger.parameter["missedTrigger"]);
+          tree->Branch("MicroDAQ.nMissedTriggers", &missedTrigger.parameter["missedTrigger"]);
           tree->Branch("timeStamp", &timeStamp);
         }
         // construct time stamp

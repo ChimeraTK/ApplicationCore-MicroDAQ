@@ -54,6 +54,7 @@ struct Dummy : public ChimeraTK::ApplicationModule {
     while(true) {
       trigger.read();
       out = out + 1;
+      outTrigger = (int)trigger;
       writeAll();
     }
   }
@@ -75,6 +76,7 @@ struct Dummy<std::string> : public ChimeraTK::ApplicationModule {
     while(true) {
       trigger.read();
       out = std::to_string(i);
+      outTrigger = (int)trigger;
       writeAll();
       ++i;
     }
@@ -98,6 +100,7 @@ struct Dummy<bool> : public ChimeraTK::ApplicationModule {
     while(true) {
       trigger.read();
       out = !out;
+      outTrigger = (int)trigger;
       writeAll();
       ++i;
     }

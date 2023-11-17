@@ -129,6 +129,70 @@ using namespace H5;
 
 /********************************************************************************************************************/
 
+BOOST_AUTO_TEST_CASE(test_diagnostics) {
+  testApp<int32_t> app;
+  ChimeraTK::TestFacility tf(app);
+
+  tf.setScalarDefault("/MicroDAQ/nTriggersPerFile", uint32_t(2));
+  tf.setScalarDefault("/MicroDAQ/nMaxFiles", uint32_t(5));
+  tf.setScalarDefault("/MicroDAQ/activate", ChimeraTK::Boolean(true));
+
+  tf.setScalarDefault("/MicroDAQ/directory", app.dir);
+  tf.runApplication();
+
+  for(size_t j = 0; j < 9; j++) {
+    tf.writeScalar("/Dummy/trigger", (int)(2 * j));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    tf.stepApplication();
+  }
+
+  // Only check second DAQ file
+  boost::filesystem::path daqPath(app.dir);
+  boost::filesystem::path file;
+  if(boost::filesystem::exists(daqPath)) {
+    if(boost::filesystem::is_directory(daqPath)) {
+      for(auto i = boost::filesystem::directory_iterator(daqPath); i != boost::filesystem::directory_iterator(); i++) {
+        // look for file *buffer0004.h5
+        std::string match = (boost::format("buffer%04d%s") % 4 % ".h5").str();
+        if(boost::filesystem::canonical(i->path()).string().find(match) != std::string::npos) {
+          file = i->path();
+        }
+      }
+    }
+  }
+  // Only check first trigger
+  H5File h5file(file.string().c_str(), H5F_ACC_RDONLY);
+  Group gr = h5file.openGroup("/");
+  auto event = gr.openGroup(gr.getObjnameByIdx(0).c_str());
+  auto dataGroup = event.openGroup("MicroDAQ");
+  {
+    DataSet dataset = dataGroup.openDataSet("nMissedTriggers");
+    DataSpace filespace = dataset.getSpace();
+    hsize_t dims[1]; // dataset dimensions
+    int rank = filespace.getSimpleExtentDims(dims);
+
+    DataSpace mspace1(rank, dims);
+    std::vector<float> v(1);
+    dataset.read(&v[0], PredType::NATIVE_FLOAT, mspace1, filespace);
+    BOOST_CHECK_EQUAL(v.at(0), 1);
+  }
+  {
+    DataSet dataset = dataGroup.openDataSet("triggerPeriod");
+    DataSpace filespace = dataset.getSpace();
+    hsize_t dims[1]; // dataset dimensions
+    int rank = filespace.getSimpleExtentDims(dims);
+
+    DataSpace mspace1(rank, dims);
+    std::vector<float> v(1);
+    dataset.read(&v[0], PredType::NATIVE_FLOAT, mspace1, filespace);
+    // should be at least 200ms
+    BOOST_CHECK_GE(v.at(0), 199);
+  }
+
+  // remove currentBuffer and data0000.h5 to data0004.h5 and the directory uDAQ
+  BOOST_CHECK_EQUAL(boost::filesystem::remove_all(app.dir), 7);
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_scalar, T, test_types) {
   std::cout << "test_scalar<" << typeid(T).name() << ">" << std::endl;
 
