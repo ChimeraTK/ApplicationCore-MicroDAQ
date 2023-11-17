@@ -17,12 +17,13 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/fusion/container/map.hpp>
-#include <boost/test/included/unit_test.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
 
 #include <fstream>
+#define BOOST_NO_EXCEPTIONS
+#include <boost/test/included/unit_test.hpp>
 using namespace boost::unit_test_framework;
+#undef BOOST_NO_EXCEPTIONS
 
 /**
  * Define a test app to test the MicroDAQModule.
@@ -59,7 +60,7 @@ BOOST_AUTO_TEST_CASE(test_directory_access) {
 
   tf.writeScalar("/Dummy/trigger", (int)0);
   tf.stepApplication();
-  BOOST_CHECK_EQUAL(tf.readScalar<ChimeraTK::Boolean>("/MicroDAQ/DAQError"), 1);
+  BOOST_CHECK_EQUAL(tf.readScalar<ChimeraTK::Boolean>("/MicroDAQ/status/DAQError"), 1);
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_dummy, T, test_types) {
