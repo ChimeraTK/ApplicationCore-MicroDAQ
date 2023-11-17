@@ -103,52 +103,17 @@ ELSE()
                 ${Boost_LIBRARIES}
     )
 ENDIF()
-  
+
 find_package(Boost COMPONENTS unit_test_framework)
-if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
-  enable_testing()
-  FILE(COPY ${CMAKE_SOURCE_DIR}/test/dummy.dmap
-          ${CMAKE_SOURCE_DIR}/test/dummy.map
-          ${CMAKE_SOURCE_DIR}/test/dummy.xlmap
-          ${CMAKE_SOURCE_DIR}/test/device_test_ROOT.xml
-          ${CMAKE_SOURCE_DIR}/test/device_test_HDF5.xml
-     DESTINATION ${PROJECT_BINARY_DIR})
-  if(ENABLE_HDF5)
-    add_executable(test_HDF5 test/test_HDF5.C ${test_headers})
-    target_link_libraries(test_HDF5 ${PROJECT_NAME} ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES})
-    add_test(test_HDF5 test_HDF5)
-    
-    FILE(COPY ${CMAKE_SOURCE_DIR}/test/device_test_HDF5.xml DESTINATION ${PROJECT_BINARY_DIR})
-    add_executable(test_Device_HDF5 test/testDevice_HDF5.C ${test_headers})
-    target_link_libraries(test_Device_HDF5 ${PROJECT_NAME} ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ChimeraTK::ChimeraTK-ApplicationCore)
-    add_test( test_Device_HDF5 test_Device_HDF5)     
-  endif(ENABLE_HDF5)
-  
-  if(ENABLE_ROOT)
-    add_executable(test_ScalarMicroDAQ test/testScalarMicroDAQ.C ${test_headers})
-    target_link_libraries(test_ScalarMicroDAQ ${PROJECT_NAME} ROOT::Tree)
-    add_test( test_ScalarMicroDAQ test_ScalarMicroDAQ)                         
-                              
-    add_executable(test_ArrayMicroDAQ test/testArrayMicroDAQ.C ${test_headers})
-    target_link_libraries(test_ArrayMicroDAQ ${PROJECT_NAME} ROOT::Tree ChimeraTK::ChimeraTK-ApplicationCore)
-    add_test( test_ArrayMicroDAQ test_ArrayMicroDAQ)                             
-
-    FILE(COPY ${CMAKE_SOURCE_DIR}/test/device_test_ROOT.xml DESTINATION ${PROJECT_BINARY_DIR})
-
-    add_executable(test_Device_ROOT test/testDevice_ROOT.C ${test_headers})
-    target_link_libraries(test_Device_ROOT ${PROJECT_NAME} ROOT::Tree ChimeraTK::ChimeraTK-ApplicationCore)
-    add_test( test_Device_ROOT test_Device_ROOT)
-    
-    add_executable(test_Diagnostics test/testDiagnostics.C)
-    target_link_libraries(test_Diagnostics ${PROJECT_NAME} ROOT::Tree ChimeraTK::ChimeraTK-ApplicationCore)
-    add_test( test_Diagnostics test_Device_ROOT)                                 
-
-
-  endif(ENABLE_ROOT)                                  
-  
+if(BUILD_TESTS)  
+if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
+enable_testing()  
+add_subdirectory(test)  
 else()
-  message(STATUS "Boost test framework not found. No boost based tests will be build.")
-endif(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
+message(STATUS "Boost test framework not found. No boost based tests will be build.")
+endif(Boost_UNIT_TEST_FRAMEWORK_FOUND)
+endif(BUILD_TESTS)
+
 
 # Install the library and the executables
 # this defines architecture-dependent ${CMAKE_INSTALL_LIBDIR}
