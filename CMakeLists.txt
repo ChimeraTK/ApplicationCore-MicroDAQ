@@ -137,7 +137,11 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
 
     add_executable(test_Device_ROOT test/testDevice_ROOT.C ${test_headers})
     target_link_libraries(test_Device_ROOT ${PROJECT_NAME} ROOT::Tree ChimeraTK::ChimeraTK-ApplicationCore)
-    add_test( test_Device_ROOT test_Device_ROOT)                             
+    add_test( test_Device_ROOT test_Device_ROOT)
+    
+    add_executable(test_Diagnostics test/testDiagnostics.C)
+    target_link_libraries(test_Diagnostics ${PROJECT_NAME} ROOT::Tree ChimeraTK::ChimeraTK-ApplicationCore)
+    add_test( test_Diagnostics test_Device_ROOT)                                 
 
 
   endif(ENABLE_ROOT)                                  
