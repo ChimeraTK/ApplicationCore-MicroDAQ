@@ -9,8 +9,8 @@
 
 #include "data_types.h"
 #include "TFile.h"
-#include "TTree.h"
 #include "TTimeStamp.h"
+#include "TTree.h"
 
 #include <list>
 
@@ -22,7 +22,9 @@ namespace ChimeraTK {
 
     template<typename TRIGGERTYPE>
     struct ROOTstorage {
-      ROOTstorage(RootDAQ<TRIGGERTYPE>* owner) : outFile(nullptr), tree(nullptr), _owner(owner) {}
+      ROOTstorage(RootDAQ<TRIGGERTYPE>* owner) : outFile(nullptr), tree(nullptr), _owner(owner) {
+        missedTrigger.parameter["missedTrigger"];
+      }
       ~ROOTstorage() { close(); }
 
       void close() {
@@ -54,6 +56,9 @@ namespace ChimeraTK {
       TemplateUserTypeMapNoVoid<fieldData> treeDataMap;
 
       TTimeStamp timeStamp;
+
+      TreeDataFields<TRIGGERTYPE> missedTrigger{};
+      Long64_t triggerPeriod{};
 
       bool firstTrigger{true};
 
@@ -208,7 +213,7 @@ namespace ChimeraTK {
       _owner->updateDAQPath();
 
       // need to open or close file?
-      if(!outFile && _owner->enable != 0 && _owner->errorStatus == 0) {
+      if(!outFile && _owner->enable != 0 && _owner->status.errorStatus == 0) {
         // some things to be done only on first trigger
         if(firstTrigger) {
           _owner->checkBufferOnFirstTrigger();
@@ -232,6 +237,8 @@ namespace ChimeraTK {
       if(outFile) {
         if(!tree) {
           boost::fusion::for_each(treeDataMap.table, ROOTTreeCreator<TRIGGERTYPE>(*this, _owner->_treeName));
+          tree->Branch("MicroDAQ.triggerPeriod", &triggerPeriod);
+          tree->Branch("MicroDAQ.NMissedTriggers", &missedTrigger.parameter["missedTrigger"]);
           tree->Branch("timeStamp", &timeStamp);
         }
         // construct time stamp
@@ -239,25 +246,27 @@ namespace ChimeraTK {
 
         // write data
         boost::fusion::for_each(treeDataMap.table, ROOTDataWriter<TRIGGERTYPE>(*this));
+        missedTrigger.parameter["missedTrigger"] = _owner->BaseDAQ<TRIGGERTYPE>::status.nMissedTriggers;
+        triggerPeriod = _owner->BaseDAQ<TRIGGERTYPE>::status.triggerPeriod;
         tree->Fill();
-        _owner->currentEntry = _owner->currentEntry + 1;
-        _owner->currentEntry.write();
+        _owner->status.currentEntry = _owner->status.currentEntry + 1;
+        _owner->status.currentEntry.write();
       }
 
       // update error status for active DAQ
       if(_owner->enable == 1) {
         // only write error message once
-        if(!outFile && _owner->errorStatus == 0) {
+        if(!outFile && _owner->status.errorStatus == 0) {
           std::cerr
               << "Something went wrong. File could not be opened. Solve the problem and toggle enable DAQ to try again."
               << std::endl;
-          _owner->errorStatus = 1;
-          _owner->errorStatus.write();
+          _owner->status.errorStatus = 1;
+          _owner->status.errorStatus.write();
           delete outFile;
         }
-        else if(outFile && _owner->errorStatus != 0) {
-          _owner->errorStatus = 0;
-          _owner->errorStatus.write();
+        else if(outFile && _owner->status.errorStatus != 0) {
+          _owner->status.errorStatus = 0;
+          _owner->status.errorStatus.write();
         }
       }
       // close file if all triggers are filled
@@ -299,6 +308,7 @@ namespace ChimeraTK {
       // Wait for the DAQ trigger and an update of all accessors using the DAQ trigger as external node
       group.readUntilAll(storage._accessorsWithTrigger);
       storage.processTrigger();
+      BaseDAQ<TRIGGERTYPE>::updateDiagnostics();
     }
   }
 
