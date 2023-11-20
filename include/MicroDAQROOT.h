@@ -1,11 +1,12 @@
+// SPDX-FileCopyrightText: Helmholtz-Zentrum Dresden-Rossendorf, FWKE, ChimeraTK Project <chimeratk-support@desy.de>
+// SPDX-License-Identifier: LGPL-3.0-or-later
+#pragma once
 /*
  * MicroDAQROOT.h
  *
  *  Created on: 21.03.2020
  *      Author: Klaus Zenker (HZDR)
  */
-
-#pragma once
 
 #include "MicroDAQ.h"
 
@@ -39,11 +40,11 @@ namespace ChimeraTK {
   class RootDAQ : public BaseDAQ<TRIGGERTYPE> {
    public:
     /**
-      *  Constructor. decimationFactor and decimationThreshold are configuration
-      * constants which determine how the data reduction is working. Arrays with a
-      * size bigger than decimationThreshold will be decimated by decimationFactor
-      * before writing to the ROOT file.
-      */
+     *  Constructor. decimationFactor and decimationThreshold are configuration
+     * constants which determine how the data reduction is working. Arrays with a
+     * size bigger than decimationThreshold will be decimated by decimationFactor
+     * before writing to the ROOT file.
+     */
     RootDAQ(ModuleGroup* owner, const std::string& name, const std::string& description, uint32_t decimationFactor = 10,
         uint32_t decimationThreshold = 1000, const std::unordered_set<std::string>& tags = {},
         const std::string& pathToTrigger = "trigger", const std::string& treeName = "data")
@@ -54,7 +55,7 @@ namespace ChimeraTK {
     }
 
     /** Default constructor, creates a non-working module. Can be used for late
-      * initialisation. */
+     * initialisation. */
     RootDAQ() : BaseDAQ<TRIGGERTYPE>() {}
 
     ScalarPollInput<uint32_t> flushAfterNEntries{this, "flushAfterNEntries", "",

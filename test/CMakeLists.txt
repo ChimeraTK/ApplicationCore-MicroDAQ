@@ -1,4 +1,3 @@
-enable_testing()
 FILE(COPY dummy.dmap
         dummy.map
         dummy.xlmap
