@@ -1,11 +1,12 @@
+// SPDX-FileCopyrightText: Helmholtz-Zentrum Dresden-Rossendorf, FWKE, ChimeraTK Project <chimeratk-support@desy.de>
+// SPDX-License-Identifier: LGPL-3.0-or-later
+#pragma once
 /*
  * MicroDAQ.h
  *
  *  Created on: Feb 3, 2020
  *      Author: Klaus Zenker (HZDR)
  */
-
-#pragma once
 
 #include <ChimeraTK/ApplicationCore/ApplicationModule.h>
 #include <ChimeraTK/ApplicationCore/ArrayAccessor.h>
@@ -90,7 +91,12 @@ namespace ChimeraTK {
         const std::unordered_set<std::string>& tags = {}, const std::string& pathToTrigger = "trigger")
     : ApplicationModule(owner, name, description, tags), trigger(this, pathToTrigger, "", "", {_tagExcludeInternals}),
       _decimationFactor(decimationFactor), _decimationThreshold(decimationThreshold),
-      _daqDefaultPath((boost::filesystem::current_path() / "uDAQ").string()), _suffix(suffix) {}
+      _daqDefaultPath((boost::filesystem::current_path() / "uDAQ").string()), _suffix(suffix) {
+      if constexpr(std::is_integral_v<TRIGGERTYPE>) {
+        status.nMissedTriggers = ScalarOutput<TRIGGERTYPE>{
+            &status, "nMissedTriggers", "", "Number of missed triggers between the last DAQ update."};
+      }
+    }
 
     BaseDAQ() : _decimationFactor(0), _decimationThreshold(0) {}
 
@@ -118,20 +124,31 @@ namespace ChimeraTK {
     ScalarPollInput<uint32_t> nTriggersPerFile{
         this, "nTriggersPerFile", "", "Number of triggers stored in each file.", {_tagExcludeInternals}};
 
-    ScalarOutput<std::string> currentPath{this, "currentDirectory", "",
-        "Directory currently used for DAQ. To switch directories turn off DAQ and set new directory.",
-        {_tagExcludeInternals}};
+    struct Status : public VariableGroup {
+      Status(const std::string& excludeTag, VariableGroup* owner, const std::string& name,
+          const std::string& description, const std::unordered_set<std::string>& tags = {})
+      : VariableGroup(owner, name, description, tags),
+        currentPath{this, "currentDirectory", "",
+            "Directory currently used for DAQ. To switch directories turn off DAQ and set new directory.",
+            {excludeTag}},
+        currentBuffer{this, "currentBuffer", "",
+            "File number currently written to. If DAQ this shows the next buffer to be used by the DAQ.", {excludeTag}},
+        currentEntry{
+            this, "currentEntry", "", "Last entry number written. Is reset with every new file.", {excludeTag}},
+        errorStatus{this, "DAQError", "", "True in case an error occurred. Reset by toggling enable.", {excludeTag}},
+        triggerPeriod{this, "triggerPeriod", "ms", "Number of skipped triggers between the last DAQ update."} {}
+      ScalarOutput<std::string> currentPath;
 
-    ScalarOutput<uint32_t> currentBuffer{this, "currentBuffer", "",
-        "File number currently written to. If DAQ this shows the next buffer to be used by the DAQ.",
-        {_tagExcludeInternals}};
+      ScalarOutput<uint32_t> currentBuffer;
 
-    ScalarOutput<uint32_t> currentEntry{
-        this, "currentEntry", "", "Last entry number written. Is reset with every new file.", {_tagExcludeInternals}};
+      ScalarOutput<uint32_t> currentEntry;
 
-    ScalarOutput<ChimeraTK::Boolean> errorStatus{
-        this, "DAQError", "", "True in case an error occurred. Reset by toggling enable.", {_tagExcludeInternals}};
+      ScalarOutput<ChimeraTK::Boolean> errorStatus;
 
+      ScalarOutput<TRIGGERTYPE> nMissedTriggers;
+      ScalarOutput<int64_t> triggerPeriod;
+
+    } status{_tagExcludeInternals, this, "status", "Status of the MicroDAQ.", {}};
     /**
      * Add all PVs found below the given directory.
      *
@@ -176,7 +193,7 @@ namespace ChimeraTK {
 
     /**
      * boost::fusion::map of UserTypes to std::lists containing the ArrayPushInput accessors. These accessors are
-     * dynamically created by the AccessorAttacher.
+     * dynamically created by addVariableFromModel.
      */
     template<typename UserType>
     using AccessorList = std::list<ArrayPushInput<UserType>>;
@@ -223,7 +240,11 @@ namespace ChimeraTK {
      */
     void disableDAQ();
 
+    void updateDiagnostics();
+
    private:
+    VersionNumber lastVersion{};
+    uint64_t lastTrigger{0};
     /**
      * Delete file corresponding to currentBuffer from the ringbuffer.
      */

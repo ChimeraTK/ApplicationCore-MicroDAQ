@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: Helmholtz-Zentrum Dresden-Rossendorf, FWKE, ChimeraTK Project <chimeratk-support@desy.de>
+// SPDX-License-Identifier: LGPL-3.0-or-later
 /*
  * MicroDAQ.cc
  *
@@ -121,8 +123,8 @@ namespace ChimeraTK {
         _daqPath = boost::filesystem::path((std::string)setPath);
       }
       std::cout << "Set new DAQ path: " << _daqPath.string().c_str() << std::endl;
-      currentPath = _daqPath.string();
-      currentPath.write();
+      status.currentPath = _daqPath.string();
+      status.currentPath.write();
     }
     catch(...) {
       std::cerr << "Failed setting new DAQ path." << std::endl;
@@ -138,7 +140,7 @@ namespace ChimeraTK {
         if(boost::filesystem::is_directory(_daqPath)) { // is p a directory?
           for(auto i = boost::filesystem::directory_iterator(_daqPath); i != boost::filesystem::directory_iterator();
               i++) {
-            std::string match = (boost::format("buffer%04d%s") % currentBuffer % _suffix).str();
+            std::string match = (boost::format("buffer%04d%s") % status.currentBuffer % _suffix).str();
             if(boost::filesystem::canonical(i->path()).string().find(match) != std::string::npos) {
               return boost::filesystem::file_size(i->path()) > 1000;
             }
@@ -162,7 +164,7 @@ namespace ChimeraTK {
         if(boost::filesystem::is_directory(_daqPath)) {
           for(auto i = boost::filesystem::directory_iterator(_daqPath); i != boost::filesystem::directory_iterator();
               i++) {
-            std::string match = (boost::format("buffer%04d%s") % currentBuffer % _suffix).str();
+            std::string match = (boost::format("buffer%04d%s") % status.currentBuffer % _suffix).str();
             if(boost::filesystem::canonical(i->path()).string().find(match) != std::string::npos) {
               boost::filesystem::remove(i->path());
             }
@@ -183,10 +185,10 @@ namespace ChimeraTK {
     setDAQPath();
     try {
       // only create path if it is the default one
-      if(((std::string)currentPath).compare(_daqDefaultPath) == 0) boost::filesystem::create_directory(_daqPath);
+      if(((std::string)status.currentPath).compare(_daqDefaultPath) == 0) boost::filesystem::create_directory(_daqPath);
     }
     catch(boost::filesystem::filesystem_error& e) {
-      std::cerr << "Failed to create DAQ directory: " << ((std::string)currentPath).c_str() << std::endl;
+      std::cerr << "Failed to create DAQ directory: " << ((std::string)status.currentPath).c_str() << std::endl;
       std::cerr << e.what() << std::endl;
       return;
     }
@@ -195,20 +197,20 @@ namespace ChimeraTK {
     bufferNumber.open((_daqPath / "currentBuffer").c_str(), std::ofstream::in);
     bufferNumber.seekg(0);
     if(!bufferNumber.eof()) {
-      bufferNumber >> currentBuffer;
-      std::string filename = _prefix + (boost::format("_buffer%04d%s") % currentBuffer % _suffix).str();
+      bufferNumber >> status.currentBuffer;
+      std::string filename = _prefix + (boost::format("_buffer%04d%s") % status.currentBuffer % _suffix).str();
       if(checkFile()) {
-        currentBuffer++;
-        currentBuffer.write();
+        status.currentBuffer++;
+        status.currentBuffer.write();
       }
-      if(currentBuffer >= nMaxFiles) {
-        currentBuffer = 0;
-        currentBuffer.write();
+      if(status.currentBuffer >= nMaxFiles) {
+        status.currentBuffer = 0;
+        status.currentBuffer.write();
       }
     }
     else {
-      currentBuffer = 0;
-      currentBuffer.write();
+      status.currentBuffer = 0;
+      status.currentBuffer.write();
     }
     bufferNumber.close();
   }
@@ -224,15 +226,15 @@ namespace ChimeraTK {
     boost::algorithm::split(result, timeStampStr, boost::is_any_of("."));
     _prefix = result.at(0);
 
-    if(currentBuffer >= nMaxFiles) {
-      currentBuffer = 0;
-      currentBuffer.write();
+    if(status.currentBuffer >= nMaxFiles) {
+      status.currentBuffer = 0;
+      status.currentBuffer.write();
     }
     std::fstream bufferNumber;
-    std::string filename = _prefix + (boost::format("_buffer%04d%s") % currentBuffer % _suffix).str();
+    std::string filename = _prefix + (boost::format("_buffer%04d%s") % status.currentBuffer % _suffix).str();
     // store current buffer number to disk
     bufferNumber.open((_daqPath / "currentBuffer").c_str(), std::ofstream::out);
-    bufferNumber << currentBuffer << std::endl;
+    bufferNumber << status.currentBuffer << std::endl;
     bufferNumber.close();
 
     deleteRingBufferFile();
@@ -246,9 +248,9 @@ namespace ChimeraTK {
   void BaseDAQ<TRIGGERTYPE>::updateDAQPath() {
     if(enable == 0) {
       if(((std::string)setPath).empty()) {
-        if(((std::string)currentPath).compare(_daqDefaultPath) != 0) setDAQPath();
+        if(((std::string)status.currentPath).compare(_daqDefaultPath) != 0) setDAQPath();
       }
-      else if(((std::string)setPath).compare((std::string)currentPath) != 0) {
+      else if(((std::string)setPath).compare((std::string)status.currentPath) != 0) {
         setDAQPath();
       }
     }
@@ -258,12 +260,12 @@ namespace ChimeraTK {
 
   template<typename TRIGGERTYPE>
   bool BaseDAQ<TRIGGERTYPE>::maxEntriesReached() {
-    if(currentEntry == nTriggersPerFile) {
+    if(status.currentEntry == nTriggersPerFile) {
       // increase current buffer number, nextBuffer will check buffer size
-      currentBuffer++;
-      currentBuffer.write();
-      currentEntry = 0;
-      currentEntry.write();
+      status.currentBuffer++;
+      status.currentBuffer.write();
+      status.currentEntry = 0;
+      status.currentEntry.write();
       return true;
     }
     return false;
@@ -273,13 +275,13 @@ namespace ChimeraTK {
 
   template<typename TRIGGERTYPE>
   void BaseDAQ<TRIGGERTYPE>::disableDAQ() {
-    currentEntry = 0;
-    currentEntry.write();
-    errorStatus = 0;
-    errorStatus.write();
+    status.currentEntry = 0;
+    status.currentEntry.write();
+    status.errorStatus = 0;
+    status.errorStatus.write();
     // increase current buffer number, nextBuffer will check buffer size
-    currentBuffer++;
-    currentBuffer.write();
+    status.currentBuffer++;
+    status.currentBuffer.write();
   }
 
   /********************************************************************************************************************/
@@ -295,6 +297,22 @@ namespace ChimeraTK {
       throw logic_error(
           "No variables are connected to the MicroDAQ module. Did you use the correct tag or connect a Device?");
     }
+  }
+
+  template<typename TRIGGERTYPE>
+  void BaseDAQ<TRIGGERTYPE>::updateDiagnostics() {
+    if constexpr(std::is_integral_v<TRIGGERTYPE>) {
+      status.nMissedTriggers = (TRIGGERTYPE)trigger - lastTrigger - 1;
+      lastTrigger = (TRIGGERTYPE)trigger;
+      status.nMissedTriggers.write();
+    }
+    if(lastVersion != VersionNumber{}) {
+      std::chrono::duration<double> diff = trigger.getVersionNumber().getTime() - lastVersion.getTime();
+      std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
+      status.triggerPeriod = ms.count();
+      status.triggerPeriod.write();
+    }
+    lastVersion = BaseDAQ<TRIGGERTYPE>::trigger.getVersionNumber();
   }
 
   /********************************************************************************************************************/

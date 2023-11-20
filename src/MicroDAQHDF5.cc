@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: Helmholtz-Zentrum Dresden-Rossendorf, FWKE, ChimeraTK Project <chimeratk-support@desy.de>
+// SPDX-License-Identifier: LGPL-3.0-or-later
 /*
  * MicroDAQHDF5.cc
  *
@@ -8,6 +10,7 @@
 #include "MicroDAQHDF5.h"
 
 #include <H5Cpp.h>
+#include <map>
 
 namespace ChimeraTK {
   namespace detail {
@@ -16,7 +19,12 @@ namespace ChimeraTK {
 
     template<typename TRIGGERTYPE>
     struct H5storage {
-      H5storage(HDF5DAQ<TRIGGERTYPE>* owner) : _owner(owner) {}
+      H5storage(HDF5DAQ<TRIGGERTYPE>* owner) : _owner(owner) {
+        // prepare internal data
+        hsize_t dimsf[1] = {1}; // dataset dimensions
+        _space["MicroDAQ.nMissedTriggers"] = H5::DataSpace(1, dimsf);
+        _space["MicroDAQ.triggerPeriod"] = H5::DataSpace(1, dimsf);
+      }
 
       std::unique_ptr<H5::H5File> outFile{};
       std::string currentGroupName;
@@ -50,6 +58,10 @@ namespace ChimeraTK {
        *  we include that step here.
        */
       std::vector<TransferElementID> _accessorsWithTrigger;
+
+     private:
+      std::vector<float> _buffer{1};
+      std::map<std::string, H5::DataSpace> _space;
     };
 
     /******************************************************************************************************************/
@@ -130,6 +142,7 @@ namespace ChimeraTK {
       // Wait for the DAQ trigger and an update of all accessors using the DAQ trigger as external node
       group.readUntilAll(storage._accessorsWithTrigger);
       storage.processTrigger();
+      BaseDAQ<TRIGGERTYPE>::updateDiagnostics();
     }
   }
 
@@ -143,7 +156,7 @@ namespace ChimeraTK {
       _owner->updateDAQPath();
 
       // need to open or close file?
-      if(!isOpened && _owner->enable != 0 && _owner->errorStatus == 0) {
+      if(!isOpened && _owner->enable != 0 && _owner->status.errorStatus == 0) {
         // some things to be done only on first trigger
         if(firstTrigger) {
           _owner->checkBufferOnFirstTrigger();
@@ -171,23 +184,23 @@ namespace ChimeraTK {
       if(isOpened) {
         // write data
         writeData();
-        _owner->currentEntry = _owner->currentEntry + 1;
-        _owner->currentEntry.write();
+        _owner->status.currentEntry = _owner->status.currentEntry + 1;
+        _owner->status.currentEntry.write();
       }
 
       // update error status for active DAQ
       if(_owner->enable == 1) {
         // only write error message once
-        if(!isOpened && _owner->errorStatus == 0) {
+        if(!isOpened && _owner->status.errorStatus == 0) {
           std::cerr
               << "Something went wrong. File could not be opened. Solve the problem and toggle enable DAQ to try again."
               << std::endl;
-          _owner->errorStatus = 1;
-          _owner->errorStatus.write();
+          _owner->status.errorStatus = 1;
+          _owner->status.errorStatus.write();
         }
-        else if(isOpened && _owner->errorStatus != 0) {
-          _owner->errorStatus = 0;
-          _owner->errorStatus.write();
+        else if(isOpened && _owner->status.errorStatus != 0) {
+          _owner->status.errorStatus = 0;
+          _owner->status.errorStatus.write();
         }
       }
 
@@ -258,7 +271,7 @@ namespace ChimeraTK {
       }
 
       // write data from internal buffer to data set in HDF5 file
-      H5::DataSet dataset = _storage.outFile->createDataSet(dataSetName, H5::PredType::NATIVE_FLOAT, dataSpace);
+      H5::DataSet dataset{_storage.outFile->createDataSet(dataSetName, H5::PredType::NATIVE_FLOAT, dataSpace)};
       dataset.write(buffer.data(), H5::PredType::NATIVE_FLOAT);
     }
 
@@ -281,6 +294,7 @@ namespace ChimeraTK {
       try {
         outFile->createGroup(currentGroupName);
         for(auto& group : groupList) outFile->createGroup(currentGroupName + "/" + group);
+        outFile->createGroup(currentGroupName + "/MicroDAQ");
       }
       catch(H5::FileIException&) {
         outFile->close();
@@ -290,6 +304,19 @@ namespace ChimeraTK {
 
       // write all data to file
       boost::fusion::for_each(_owner->BaseDAQ<TRIGGERTYPE>::_accessorListMap.table, H5DataWriter<TRIGGERTYPE>(*this));
+
+      // write internal data
+      // ToDo: userTypeToNumeric<float>((TRIGGERTYPE)_owner->BaseDAQ<TRIGGERTYPE>::status.nMissedTriggers) is not
+      // working for Boolean - Why?
+      TRIGGERTYPE tmpData = _owner->BaseDAQ<TRIGGERTYPE>::status.nMissedTriggers;
+      _buffer[0] = userTypeToNumeric<float>(tmpData);
+      H5::DataSet dataset{outFile->createDataSet(currentGroupName + "/MicroDAQ/nMissedTriggers",
+          H5::PredType::NATIVE_FLOAT, _space["MicroDAQ.nMissedTriggers"])};
+      dataset.write(_buffer.data(), H5::PredType::NATIVE_FLOAT);
+      H5::DataSet dataset1{outFile->createDataSet(
+          currentGroupName + "/MicroDAQ/triggerPeriod", H5::PredType::NATIVE_FLOAT, _space["MicroDAQ.triggerPeriod"])};
+      _buffer[0] = userTypeToNumeric<float>((int64_t)_owner->BaseDAQ<TRIGGERTYPE>::status.triggerPeriod);
+      dataset1.write(_buffer.data(), H5::PredType::NATIVE_FLOAT);
     }
 
     /******************************************************************************************************************/

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Helmholtz-Zentrum Dresden-Rossendorf, FWKE, ChimeraTK Project <chimeratk-support@desy.de>
+// SPDX-License-Identifier: LGPL-3.0-or-later
+#pragma once
 /*
  * data_type.h
  *
@@ -5,29 +8,25 @@
  *      Author: Klaus Zenker (HZDR)
  */
 
-#ifndef INCLUDE_DATA_TYPES_H_
-#define INCLUDE_DATA_TYPES_H_
-
-#include "TString.h"
-#include "TDatime.h"
-#include "TArrayF.h"
-#include "TArrayS.h"
-#include "TArrayL.h"
-#include "TArrayD.h"
-#include "TArrayI.h"
 #include "TArrayC.h"
-
-#include <string>
+#include "TArrayD.h"
+#include "TArrayF.h"
+#include "TArrayI.h"
+#include "TArrayL.h"
+#include "TArrayS.h"
+#include "TDatime.h"
+#include "TString.h"
 
 #include <ChimeraTK/SupportedUserTypes.h>
 
 #include <map>
+#include <string>
 
 /** MicroDAQ related data types */
 namespace ChimeraTK { namespace detail {
   /* Add TArray for std::string since it is needed
-     * for the TreeDataFields template specialization.
-     */
+   * for the TreeDataFields template specialization.
+   */
   class TArrayStr : public TArray {
    private:
     std::vector<std::string> _buffer;
@@ -109,5 +108,3 @@ namespace ChimeraTK { namespace detail {
     std::map<std::string, TArrayC> trace;
   };
 }} // namespace ChimeraTK::detail
-
-#endif /* INCLUDE_DATA_TYPES_H_ */

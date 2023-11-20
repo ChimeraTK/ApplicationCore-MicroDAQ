@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: Helmholtz-Zentrum Dresden-Rossendorf, FWKE, ChimeraTK Project <chimeratk-support@desy.de>
+// SPDX-License-Identifier: LGPL-3.0-or-later
 /*
  * testArrayMicroDAQ.C
  *
@@ -17,13 +19,15 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/fusion/container/map.hpp>
-#include <boost/test/included/unit_test.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
 
 #include <algorithm>
 #include <fstream>
+
+#define BOOST_NO_EXCEPTIONS
+#include <boost/test/included/unit_test.hpp>
 using namespace boost::unit_test_framework;
+#undef BOOST_NO_EXCEPTIONS
 
 /**
  * Define a test app to test the MicroDAQModule.

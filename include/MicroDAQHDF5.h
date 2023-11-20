@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Helmholtz-Zentrum Dresden-Rossendorf, FWKE, ChimeraTK Project <chimeratk-support@desy.de>
+// SPDX-License-Identifier: LGPL-3.0-or-later
+#pragma once
 /*
  * MicroDAQHDF5.h
  *
@@ -5,13 +8,11 @@
  *      Author: Klaus Zenker (HZDR)
  */
 
-#pragma once
+#include "MicroDAQ.h"
 
-#include <ChimeraTK/SupportedUserTypes.h>
 #include <ChimeraTK/ApplicationCore/ArrayAccessor.h>
 #include <ChimeraTK/ApplicationCore/VariableGroup.h>
-
-#include "MicroDAQ.h"
+#include <ChimeraTK/SupportedUserTypes.h>
 
 namespace ChimeraTK {
 

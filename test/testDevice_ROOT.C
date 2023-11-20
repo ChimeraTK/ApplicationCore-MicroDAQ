@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: Helmholtz-Zentrum Dresden-Rossendorf, FWKE, ChimeraTK Project <chimeratk-support@desy.de>
+// SPDX-License-Identifier: LGPL-3.0-or-later
 /*
  * testScalarMicroDAQ.C
  *
@@ -18,12 +20,14 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/fusion/container/map.hpp>
-#include <boost/test/included/unit_test.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
 
 #include <memory>
+
+#define BOOST_NO_EXCEPTIONS
+#include <boost/test/included/unit_test.hpp>
 using namespace boost::unit_test_framework;
+#undef BOOST_NO_EXCEPTIONS
 
 BOOST_AUTO_TEST_CASE(test_device_daq) {
   ChimeraTK::BackendFactory::getInstance().setDMapFilePath("dummy.dmap");
