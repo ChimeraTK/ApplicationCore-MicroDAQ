@@ -77,8 +77,12 @@ namespace ChimeraTK {
   void MicroDAQ<TRIGGERTYPE>::addDeviceModule(
       DeviceModule& source, const RegisterPath& namePrefix, const RegisterPath& submodule) {
     if(impl) {
-      source.getModel().visit([&](auto pv) { impl->addVariableFromModel(pv, namePrefix, submodule); },
-          Model::keepPvAccess, Model::adjacentSearch, Model::keepProcessVariables);
+      std::vector<Model::ProcessVariableProxy> pvs;
+      source.getModel().visit([&](auto pv) { pvs.emplace_back(pv); }, Model::keepPvAccess, Model::adjacentSearch,
+          Model::keepProcessVariables);
+      for(auto pv : pvs) {
+        impl->addVariableFromModel(pv, namePrefix, submodule);
+      }
     }
   }
 
