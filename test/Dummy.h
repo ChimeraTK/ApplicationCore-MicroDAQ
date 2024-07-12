@@ -98,14 +98,12 @@ struct Dummy<bool> : public ChimeraTK::ApplicationModule {
     // The first string will be initalized to "" instead of "0", but we don't care here
     writeAll();
     // Set to 1 so that the second entry will be "1"
-    int i = 1;
     out = false;
     while(true) {
       trigger.read();
       out = !out;
       outTrigger = (int)trigger;
       writeAll();
-      ++i;
     }
   }
 };
