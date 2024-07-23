@@ -290,11 +290,6 @@ namespace ChimeraTK {
 
   /********************************************************************************************************************/
 
-  INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(MicroDAQ);
-  INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(BaseDAQ);
-
-  /********************************************************************************************************************/
-
   template<typename TRIGGERTYPE>
   void BaseDAQ<TRIGGERTYPE>::prepare() {
     if(!_overallVariableList.size()) {
@@ -318,6 +313,11 @@ namespace ChimeraTK {
     }
     lastVersion = BaseDAQ<TRIGGERTYPE>::trigger.getVersionNumber();
   }
+
+  /********************************************************************************************************************/
+
+  INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(MicroDAQ);
+  INSTANTIATE_TEMPLATE_FOR_CHIMERATK_USER_TYPES_NO_VOID(BaseDAQ);
 
   /********************************************************************************************************************/
 
