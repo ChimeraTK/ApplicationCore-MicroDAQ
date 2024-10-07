@@ -10,15 +10,15 @@ option(BUILD_TESTS "Build tests" ON)
 # ______________________________________________________________________________
 # VERSION
 set(${PROJECT_NAME}_MAJOR_VERSION 03)
-set(${PROJECT_NAME}_MINOR_VERSION 02)
-set(${PROJECT_NAME}_PATCH_VERSION 01)
+set(${PROJECT_NAME}_MINOR_VERSION 03)
+set(${PROJECT_NAME}_PATCH_VERSION 00)
 include(${CMAKE_SOURCE_DIR}/cmake/set_version_numbers.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/set_default_flags.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/set_default_build_to_release.cmake)
 
 # ______________________________________________________________________________
 # Dependencies
-find_package(ChimeraTK-ApplicationCore 03.02 REQUIRED)
+find_package(ChimeraTK-ApplicationCore 04.00 REQUIRED)
 
 # extract ApplicationCore include dir from the chimeraTK target - it is needed to build the ROOT dictionary
 get_target_property(ChimeraTK-ApplicationCore_INCLUDE_DIRS ChimeraTK::ChimeraTK-ApplicationCore INTERFACE_INCLUDE_DIRECTORIES)

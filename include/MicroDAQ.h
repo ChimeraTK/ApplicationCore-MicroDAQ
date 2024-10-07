@@ -11,7 +11,6 @@
 #include <ChimeraTK/ApplicationCore/ApplicationModule.h>
 #include <ChimeraTK/ApplicationCore/ArrayAccessor.h>
 #include <ChimeraTK/ApplicationCore/ConfigReader.h>
-#include <ChimeraTK/ApplicationCore/HierarchyModifyingGroup.h>
 #include <ChimeraTK/ApplicationCore/ModuleGroup.h>
 #include <ChimeraTK/ApplicationCore/ScalarAccessor.h>
 #include <ChimeraTK/ApplicationCore/VariableGroup.h>
@@ -292,8 +291,8 @@ namespace ChimeraTK {
 
     // gather information about the PV
     auto name = pv.getFullyQualifiedPath();
-    const auto& type = pv.getNodes().front().getValueType(); // All node types must be equal for a PV
-    auto length = pv.getNodes().front().getNumberOfElements();
+    const auto& type = pv.getNodes().front()->getValueType(); // All node types must be equal for a PV
+    auto length = pv.getNodes().front()->getNumberOfElements();
 
     // check if qualified path name patches the given submodule name
     if(submodule != "/" && !boost::starts_with(name, std::string(submodule) + "/")) {
