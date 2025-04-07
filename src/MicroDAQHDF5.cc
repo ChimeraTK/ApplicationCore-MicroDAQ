@@ -10,6 +10,7 @@
 #include "MicroDAQHDF5.h"
 
 #include <H5Cpp.h>
+
 #include <map>
 
 namespace ChimeraTK {

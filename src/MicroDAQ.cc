@@ -15,9 +15,10 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/format.hpp>
 
+#include <string.h>
+
 #include <fstream>
 #include <iostream>
-#include <string.h>
 #include <vector>
 
 #ifdef ENABLE_HDF5
