@@ -17,7 +17,7 @@
 typedef boost::mpl::list<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float, double, bool, std::string>
     test_types;
 
-/********************************************************************************************************************/
+/**********************************************************************************************************************/
 
 struct DummyWithTag : public ChimeraTK::ApplicationModule {
   DummyWithTag(ChimeraTK::ModuleGroup* module, const std::string& name, const std::string& description,
@@ -40,7 +40,7 @@ struct DummyWithTag : public ChimeraTK::ApplicationModule {
   }
 };
 
-/********************************************************************************************************************/
+/**********************************************************************************************************************/
 
 template<typename UserType>
 struct Dummy : public ChimeraTK::ApplicationModule {
@@ -63,7 +63,7 @@ struct Dummy : public ChimeraTK::ApplicationModule {
   }
 };
 
-/********************************************************************************************************************/
+/**********************************************************************************************************************/
 
 template<>
 struct Dummy<std::string> : public ChimeraTK::ApplicationModule {
@@ -86,7 +86,7 @@ struct Dummy<std::string> : public ChimeraTK::ApplicationModule {
   }
 };
 
-/********************************************************************************************************************/
+/**********************************************************************************************************************/
 
 template<>
 struct Dummy<bool> : public ChimeraTK::ApplicationModule {
@@ -107,7 +107,7 @@ struct Dummy<bool> : public ChimeraTK::ApplicationModule {
   }
 };
 
-/********************************************************************************************************************/
+/**********************************************************************************************************************/
 
 template<typename UserType>
 struct DummyArray : public ChimeraTK::ApplicationModule {
@@ -129,7 +129,7 @@ struct DummyArray : public ChimeraTK::ApplicationModule {
   }
 };
 
-/********************************************************************************************************************/
+/**********************************************************************************************************************/
 
 template<>
 struct DummyArray<std::string> : public ChimeraTK::ApplicationModule {
@@ -151,7 +151,7 @@ struct DummyArray<std::string> : public ChimeraTK::ApplicationModule {
   }
 };
 
-/********************************************************************************************************************/
+/**********************************************************************************************************************/
 
 template<>
 struct DummyArray<bool> : public ChimeraTK::ApplicationModule {
@@ -173,7 +173,7 @@ struct DummyArray<bool> : public ChimeraTK::ApplicationModule {
   }
 };
 
-/********************************************************************************************************************/
+/**********************************************************************************************************************/
 
 /**
  * Define a test app to test adding device modules to the MicroDAQ module
