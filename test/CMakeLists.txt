@@ -2,6 +2,7 @@ FILE(COPY dummy.dmap
   dummy.map
   dummy.xlmap
   device_test_ROOT.xml
+  device_test_ROOT_treename.xml
   device_test_HDF5.xml
   DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
