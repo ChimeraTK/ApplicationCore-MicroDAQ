@@ -1,0 +1,11 @@
+<configuration>
+  <module name="Configuration">
+    <module name="MicroDAQ">
+      <variable name="enable" type="boolean" value="true" />
+      <variable name="outputFormat" type="string" value="root" />
+      <variable name="decimationFactor" type="uint32" value="10" />
+      <variable name="decimationThreshold" type="uint32" value="200000" />
+      <variable name="treeName" type="string" value="MyTreeName" />
+    </module>
+  </module>
+</configuration>

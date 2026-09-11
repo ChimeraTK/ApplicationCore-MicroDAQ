@@ -14,13 +14,14 @@ The idea to use ROOT files instead of HDF5 files is to reduce the file size and 
 
 ## Envelope class
 
-The envelope class `MicroDAQ` can used to include the DAQ into a server, while allowing to configure the DAQ via the server config file. 
+The envelope class `MicroDAQ` can be used to include the DAQ into a server, while allowing to configure the DAQ via the server config file. 
 In the config file, the following variables are required:
 
 * MicroDAQ/enable (int32): boolean flag whether the MicroDAQ system is enabled or not
 * MicroDAQ/outputFormat (string): format of the output data, either "hdf5" or "root"
 * MicroDAQ/decimationFactor (uint32): decimation factor applied to large arrays (above decimationThreshold)
 * MicroDAQ/decimationThreshold (uint32): array size threshold above which the decimationFactor is applied
+* MicroDAQ/treeName (string): the root tree name. This is only used in case of outputFormat = root 
 
 If `MicroDAQ/enable == 0`, all other variables can be omitted.
 

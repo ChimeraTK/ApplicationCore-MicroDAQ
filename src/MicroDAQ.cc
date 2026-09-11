@@ -58,8 +58,9 @@ namespace ChimeraTK {
     }
     else if(type == "root") {
 #ifdef ENABLE_ROOT
+      auto treeName = appConfig().template get<std::string>("Configuration/MicroDAQ/treeName", "data");
       impl = std::make_shared<RootDAQ<TRIGGERTYPE>>(
-          this, name, description, decimationFactor, decimationThreshold, tags, pathToTrigger);
+          this, name, description, decimationFactor, decimationThreshold, tags, pathToTrigger, treeName);
 #else
       throw ChimeraTK::logic_error("MicroDAQ: Output format ROOT selected but not compiled in.");
 #endif
